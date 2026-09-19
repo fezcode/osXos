@@ -55,7 +55,8 @@ steps in order and stop/report any failure before proceeding:
 5. Push the commit to osXos's configured remote/release branch (normally
    `origin main`). Inspect `git remote -v` and the branch first. Never use Cogas's or
    Hisashi's remote, infer a missing remote, or force-push. The repository is
-   private; keep it private unless the user asks otherwise.
+   public, so a push is visible immediately; never push work the user has not
+   agreed to publish.
 6. Create the matching `vX.Y.Z` tag on the verified commit, push it, and create a
    GitHub release with `gh release create vX.Y.Z`, attaching the matching
    `dist/installer/osXos-Setup-X.Y.Z.exe` and both

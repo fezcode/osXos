@@ -87,6 +87,10 @@ Nine editorial palettes and seven typefaces, switchable live, shared with Cogas.
 
 **Settings → Local Data** shows the exact path and opens the folder. Nothing is stored anywhere else, and osXos makes no network requests at all.
 
+## Releases
+
+Pre-built binaries for all three platforms are on the [Releases](https://github.com/fezcode/osXos/releases) page — a Windows installer, and tarballs for macOS (Apple Silicon and Intel) and Linux.
+
 ## Build requirements
 
 - **.NET 8.0 SDK**
