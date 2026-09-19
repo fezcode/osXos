@@ -1,0 +1,263 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OsXos.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="660" d:DesignHeight="580"
+        x:Class="OsXos.Views.ToolWindow"
+        x:DataType="vm:ToolWindowViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/icon.png"
+        Width="660" Height="580"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        TransparencyLevelHint="Mica, AcrylicBlur, Blur"
+        Background="{DynamicResource Bg0}">
+
+  <Window.Styles>
+    <!-- Stage rail dot. Filled once that stage has been reached, hollow before. -->
+    <Style Selector="Ellipse.stageDot">
+      <Setter Property="Width" Value="9"/>
+      <Setter Property="Height" Value="9"/>
+      <Setter Property="Fill" Value="{DynamicResource Line}"/>
+    </Style>
+    <Style Selector="Ellipse.stageDot.on">
+      <Setter Property="Fill" Value="{DynamicResource Cyan}"/>
+    </Style>
+    <Style Selector="Rectangle.stageBar">
+      <Setter Property="Height" Value="2"/>
+      <Setter Property="Width" Value="34"/>
+      <Setter Property="Fill" Value="{DynamicResource Line}"/>
+    </Style>
+    <Style Selector="Rectangle.stageBar.on">
+      <Setter Property="Fill" Value="{DynamicResource Cyan}"/>
+    </Style>
+    <Style Selector="TextBlock.stageLabel">
+      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="LetterSpacing" Value="1"/>
+      <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
+    </Style>
+    <Style Selector="TextBlock.stageLabel.on">
+      <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="24,20">
+
+    <!-- ========================================================= -->
+    <!-- HEADER                                                    -->
+    <!-- ========================================================= -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,14">
+      <Border Width="42" Height="42" CornerRadius="10" Margin="0,0,14,0"
+              Background="{DynamicResource AccentMuted}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="1"
+              VerticalAlignment="Top">
+        <PathIcon Data="{Binding Icon}" Width="19" Height="19" Foreground="{DynamicResource Accent}"/>
+      </Border>
+
+      <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+        <TextBlock Text="{Binding Eyebrow}" Classes="eyebrow"/>
+        <TextBlock Text="{Binding Title}" Classes="h2"/>
+        <TextBlock Text="{Binding Summary}" FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- ========================================================= -->
+    <!-- STAGE RAIL                                                -->
+    <!-- ========================================================= -->
+    <Border Grid.Row="1" Background="{DynamicResource SurfaceHover}" CornerRadius="8"
+            BorderBrush="{DynamicResource Line}" BorderThickness="1"
+            Padding="16,9" Margin="0,0,0,14">
+      <StackPanel Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"
+                  VerticalAlignment="Center">
+        <Ellipse Classes="stageDot on"/>
+        <TextBlock Text="EXPLAIN" Classes="stageLabel on" VerticalAlignment="Center"/>
+        <Rectangle Classes="stageBar" Classes.on="{Binding ReviewDotActive}" VerticalAlignment="Center"/>
+        <Ellipse Classes="stageDot" Classes.on="{Binding ReviewDotActive}"/>
+        <TextBlock Text="REVIEW" Classes="stageLabel" Classes.on="{Binding ReviewDotActive}" VerticalAlignment="Center"/>
+        <Rectangle Classes="stageBar" Classes.on="{Binding ResultDotActive}" VerticalAlignment="Center"/>
+        <Ellipse Classes="stageDot" Classes.on="{Binding ResultDotActive}"/>
+        <TextBlock Text="RESULT" Classes="stageLabel" Classes.on="{Binding ResultDotActive}" VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
+    <!-- ========================================================= -->
+    <!-- STAGE BODY                                                -->
+    <!-- ========================================================= -->
+    <Panel Grid.Row="2">
+
+      <!-- ===== EXPLAIN ===== -->
+      <ScrollViewer IsVisible="{Binding IsExplain}">
+        <ItemsControl ItemsSource="{Binding Steps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:StepRow">
+              <Grid ColumnDefinitions="Auto,*" Margin="0,0,4,14">
+                <!-- Numbered disc. Fixed size and explicit centring so one- and
+                     two-digit numbers sit on the same baseline. -->
+                <Border Width="24" Height="24" CornerRadius="12" Margin="0,1,13,0"
+                        Background="{DynamicResource Accent}" VerticalAlignment="Top">
+                  <TextBlock Text="{Binding NumberText}" FontSize="12" FontWeight="Bold"
+                             Foreground="{DynamicResource OnAccent}"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3">
+                  <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Bold"
+                             Foreground="{DynamicResource Text}" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Detail}" FontSize="12" Classes="muted"
+                             TextWrapping="Wrap" LineHeight="18"/>
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <!-- ===== REVIEW ===== -->
+      <Grid IsVisible="{Binding IsReview}" RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Warning, for anything that restarts the shell or cannot be undone -->
+        <Border Grid.Row="0" IsVisible="{Binding HasWarning}"
+                Background="{DynamicResource GoldMuted}" BorderBrush="{DynamicResource Gold}"
+                BorderThickness="1" CornerRadius="8" Padding="13,10" Margin="0,0,0,12">
+          <Grid ColumnDefinitions="Auto,*">
+            <PathIcon Data="{StaticResource IconWarning}" Width="15" Height="15"
+                      Foreground="{DynamicResource Gold}" VerticalAlignment="Top" Margin="0,1,11,0"/>
+            <TextBlock Grid.Column="1" Text="{Binding Warning}" FontSize="12"
+                       Foreground="{DynamicResource Gold}" TextWrapping="Wrap" LineHeight="17"/>
+          </Grid>
+        </Border>
+
+        <!-- Blocker: the tool cannot run here, and says exactly why -->
+        <Border Grid.Row="1" IsVisible="{Binding HasBlocker}"
+                Background="{DynamicResource SurfaceHover}" BorderBrush="{DynamicResource LineBright}"
+                BorderThickness="1" CornerRadius="8" Padding="13,11" Margin="0,0,0,12">
+          <Grid ColumnDefinitions="Auto,*">
+            <PathIcon Data="{StaticResource IconInfo}" Width="15" Height="15"
+                      Foreground="{DynamicResource Muted}" VerticalAlignment="Top" Margin="0,1,11,0"/>
+            <StackPanel Grid.Column="1" Spacing="3">
+              <TextBlock Text="NOTHING TO DO" Classes="eyebrow"/>
+              <TextBlock Text="{Binding Blocker}" FontSize="12" Classes="muted"
+                         TextWrapping="Wrap" LineHeight="17"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- What was found -->
+        <Border Grid.Row="2" IsVisible="{Binding !HasBlocker}"
+                Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
+                BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceHover}" Padding="13,8"
+                    BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="FOUND ON THIS MACHINE" Classes="eyebrow" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Inspecting..." FontSize="11" Classes="dim"
+                           IsVisible="{Binding Inspecting}" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1">
+              <ItemsControl ItemsSource="{Binding Rows}" Margin="13,9,13,11">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:PreviewRow">
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,7">
+                      <StackPanel Spacing="1">
+                        <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Text}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Detail}" FontSize="11" Classes="mono dim"
+                                   IsVisible="{Binding HasDetail}" TextWrapping="Wrap"/>
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontSize="11"
+                                 Classes="mono muted" IsVisible="{Binding HasSize}"
+                                 VerticalAlignment="Top" Margin="14,0,0,0"/>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" Text="{Binding PreviewSummary}" FontSize="12" Classes="muted"
+                   TextWrapping="Wrap" Margin="2,11,0,0" IsVisible="{Binding !HasBlocker}"/>
+      </Grid>
+
+      <!-- ===== RESULT ===== -->
+      <ScrollViewer IsVisible="{Binding IsResult}">
+        <StackPanel Spacing="14">
+          <Grid ColumnDefinitions="Auto,*">
+            <Border Width="42" Height="42" CornerRadius="21" Margin="0,0,14,0"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource GreenMuted}" BorderBrush="{DynamicResource Green}"
+                    BorderThickness="1" IsVisible="{Binding ResultOk}">
+              <PathIcon Data="{StaticResource IconSuccess}" Width="19" Height="19"
+                        Foreground="{DynamicResource Green}"/>
+            </Border>
+            <Border Width="42" Height="42" CornerRadius="21" Margin="0,0,14,0"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource RedMuted}" BorderBrush="{DynamicResource Red}"
+                    BorderThickness="1" IsVisible="{Binding ResultFailed}">
+              <PathIcon Data="{StaticResource IconFailure}" Width="19" Height="19"
+                        Foreground="{DynamicResource Red}"/>
+            </Border>
+
+            <TextBlock Grid.Column="1" Text="{Binding ResultHeadline}" Classes="h3"
+                       TextWrapping="Wrap" VerticalAlignment="Center"/>
+          </Grid>
+
+          <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
+                  BorderThickness="1" CornerRadius="8" Padding="14,12">
+            <ItemsControl ItemsSource="{Binding ResultLines}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Text="{Binding}" FontSize="12" Classes="muted"
+                             TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,4"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Panel>
+
+    <!-- ========================================================= -->
+    <!-- FOOTER — buttons change per stage                         -->
+    <!-- ========================================================= -->
+    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Margin="0,18,0,0">
+
+      <Button Classes="Ghost" Command="{Binding BackCommand}" IsVisible="{Binding IsReview}">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <PathIcon Data="{StaticResource IconChevronLeft}" Width="10" Height="10" VerticalAlignment="Center"/>
+          <TextBlock Text="Back" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <!-- Explain -->
+        <Button Classes="Ghost" Content="Close" Command="{Binding CloseCommand}"
+                IsVisible="{Binding IsExplain}" IsCancel="True"/>
+        <Button Classes="Accent" Command="{Binding ContinueCommand}"
+                IsVisible="{Binding IsExplain}" IsDefault="True">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="Continue" VerticalAlignment="Center"/>
+            <PathIcon Data="{StaticResource IconChevronRight}" Width="10" Height="10" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- Review -->
+        <Button Classes="Ghost" Content="Cancel" Command="{Binding CloseCommand}"
+                IsVisible="{Binding IsReview}" IsCancel="True"/>
+        <Button Content="{Binding RunLabel}" Command="{Binding RunCommand}"
+                Classes.Danger="{Binding IsDestructive}"
+                Classes.Accent="{Binding !IsDestructive}"
+                IsVisible="{Binding IsReview}" IsEnabled="{Binding CanRun}"
+                IsDefault="True"/>
+
+        <!-- Result -->
+        <Button Classes="Accent" Content="Close" Command="{Binding CloseCommand}"
+                IsVisible="{Binding IsResult}" IsDefault="True" IsCancel="True"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

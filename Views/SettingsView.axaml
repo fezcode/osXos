@@ -1,0 +1,233 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:OsXos.ViewModels"
+             xmlns:models="using:OsXos.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+             x:Class="OsXos.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <UserControl.Styles>
+    <Style Selector="ListBox.themeList ListBoxItem">
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="4,4,8,8"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="ListBox.themeList ListBoxItem:selected Border.themeCard">
+      <Setter Property="BorderBrush" Value="{DynamicResource Cyan}"/>
+      <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+    <Style Selector="ListBox.themeList ListBoxItem:pointerover Border.themeCard">
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- ========================================================= -->
+    <!-- FLUENT COMMAND BAR                                        -->
+    <!-- ========================================================= -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource BgTopBar}"
+            BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
+            Padding="24,14">
+      <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+        <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="Settings" Classes="h1" VerticalAlignment="Center"/>
+          <TextBlock Text="Theme appearance, font typography, how tool windows open, and where osXos keeps its data."
+                     FontSize="12" Classes="muted"/>
+        </StackPanel>
+
+        <Button Grid.Column="1" Classes="Modern" Command="{Binding CancelCommand}"
+                IsVisible="{Binding IsDirty}" Margin="0,0,10,0" VerticalAlignment="Center">
+          <TextBlock Text="Discard Changes" VerticalAlignment="Center"/>
+        </Button>
+
+        <Button Grid.Column="2" Classes="Accent" Command="{Binding SaveCommand}"
+                VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Data="{StaticResource IconCheck}" Width="12" Height="12" VerticalAlignment="Center"/>
+            <TextBlock Text="Save Settings" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ========================================================= -->
+    <!-- SETTINGS PANELS STREAM                                    -->
+    <!-- ========================================================= -->
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="24,18,24,20" Spacing="14" MaxWidth="840" HorizontalAlignment="Left">
+
+        <!-- UNSAVED CHANGES WARNING BANNER -->
+        <Border IsVisible="{Binding IsDirty}" Background="{DynamicResource GoldMuted}"
+                BorderBrush="{DynamicResource Gold}" BorderThickness="1" CornerRadius="8"
+                Padding="14,10" Margin="0,0,0,4">
+          <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Ellipse Width="8" Height="8" Fill="{DynamicResource Gold}" VerticalAlignment="Center"/>
+              <TextBlock Text="Unsaved Changes" FontWeight="Bold" FontSize="13" Classes="gold" VerticalAlignment="Center"/>
+              <TextBlock Text="— You have modified settings that are not saved yet." FontSize="12" Classes="muted" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <Button Grid.Column="1" Classes="Modern" Command="{Binding CancelCommand}" Margin="0,0,8,0" Padding="12,6">
+              <TextBlock Text="Discard" FontSize="12"/>
+            </Button>
+
+            <Button Grid.Column="2" Classes="Accent" Command="{Binding SaveCommand}" Padding="14,6">
+              <TextBlock Text="Save Changes" FontSize="12"/>
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- STATUS LINE -->
+        <Border IsVisible="{Binding HasStatus}" Background="{DynamicResource SurfaceHover}"
+                BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="6"
+                Padding="12,8">
+          <TextBlock Text="{Binding Status}" FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+        </Border>
+
+        <!-- CARD 0: APPEARANCE & THEME PALETTES -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <StackPanel Spacing="2">
+              <TextBlock Text="APPEARANCE &amp; PALETTES" Classes="eyebrow"/>
+              <TextBlock Text="Nature Landscape Theme &amp; Color Scheme" Classes="h3"/>
+            </StackPanel>
+
+            <TextBlock Text="Select a curated color palette inspired by editorial nature landscape photography and deep obsidian midnight styling. Changes apply immediately so you can see them; they are written to disk on Save."
+                       FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+
+            <ListBox Classes="themeList" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"
+                     Background="Transparent" BorderThickness="0">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:ThemeDefinition">
+                  <Border Classes="themeCard" Width="240" Padding="12" CornerRadius="10"
+                          Background="{DynamicResource SurfaceHover}"
+                          BorderBrush="{DynamicResource Line}" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                      <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                        <Border Background="{DynamicResource Surface}" CornerRadius="4" Padding="6,2"
+                                BorderBrush="{DynamicResource Line}" BorderThickness="1" HorizontalAlignment="Left">
+                          <TextBlock Text="{Binding PaletteLabel}" FontSize="10" FontWeight="Bold" Classes="muted"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                          <Border Width="16" Height="16" CornerRadius="8" Background="{Binding PrimaryBrush}"
+                                  BorderBrush="#40000000" BorderThickness="1" ToolTip.Tip="Sidebar Primary"/>
+                          <Border Width="16" Height="16" CornerRadius="8" Background="{Binding SecondaryBrush}"
+                                  BorderBrush="#40000000" BorderThickness="1" ToolTip.Tip="Accent Highlight"/>
+                          <Border Width="16" Height="16" CornerRadius="8" Background="{Binding BackgroundBrush}"
+                                  BorderBrush="#40000000" BorderThickness="1" ToolTip.Tip="Backdrop Canvas"/>
+                        </StackPanel>
+                      </Grid>
+
+                      <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource Text}"/>
+                      <TextBlock Text="{Binding Description}" FontSize="11" Classes="muted" TextWrapping="Wrap" MaxLines="2"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </Border>
+
+        <!-- CARD 1: TYPOGRAPHY & FONT RENDERING -->
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Text="TYPOGRAPHY &amp; FONTS" Classes="eyebrow"/>
+              <TextBlock Text="Global Font Family" Classes="h3"/>
+            </StackPanel>
+
+            <TextBlock Text="Choose how typography is rendered across all views (Neo-Grotesque, Windows Segoe, Editorial Serif, or Code Monospace)."
+                       FontSize="12" Classes="muted"/>
+
+            <ComboBox Width="480" ItemsSource="{Binding Fonts}" SelectedItem="{Binding SelectedFont}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="models:FontDefinition">
+                  <StackPanel Spacing="2" Margin="0,3">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
+                    <TextBlock Text="{Binding SampleText}" FontSize="10" Classes="dim"
+                               FontFamily="{Binding Family}"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+        </Border>
+
+        <!-- CARD 2: BEHAVIOUR -->
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Text="BEHAVIOUR" Classes="eyebrow"/>
+              <TextBlock Text="How Tool Windows Open" Classes="h3"/>
+            </StackPanel>
+
+            <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
+                       Text="Every tool opens in its own window with three stages: Explain lists what it will do, Review shows what was actually found on this machine, and Result reports what happened. Turn this off to land on Review instead — the steps are still one Back away, and nothing runs until you press the button on Review either way."/>
+
+            <CheckBox IsChecked="{Binding AlwaysExplain}"
+                      Content="Open tool windows on the Explain stage"/>
+          </StackPanel>
+        </Border>
+
+        <!-- CARD 3: LOCAL DATA -->
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Text="LOCAL DATA" Classes="eyebrow"/>
+              <TextBlock Text="Settings File Location" Classes="h3"/>
+            </StackPanel>
+
+            <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
+                       Text="Your theme, font and behaviour choices live in this folder, as plain JSON you can read and edit. osXos stores nothing anywhere else and sends nothing anywhere."/>
+
+            <Border Background="{DynamicResource SurfaceHover}" CornerRadius="6" Padding="12,10"
+                    BorderBrush="{DynamicResource Line}" BorderThickness="1">
+              <StackPanel Spacing="8">
+                <SelectableTextBlock Text="{Binding SettingsFilePath}" Classes="mono" FontSize="12"
+                                     TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding StorageSummary}" FontSize="11" Classes="dim"/>
+
+                <Rectangle Height="1" Fill="{DynamicResource Line}" HorizontalAlignment="Stretch"/>
+
+                <TextBlock Text="{Binding ToolCountText}" FontSize="11" Classes="muted"/>
+              </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Classes="Modern" Command="{Binding OpenDataFolderCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Data="{StaticResource IconFolder}" Width="12" Height="12" VerticalAlignment="Center"/>
+                  <TextBlock Text="Open Folder" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="Ghost" Content="Copy Path" Command="{Binding CopyDataPathCommand}"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- CARD 4: ABOUT THIS BUILD -->
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <StackPanel Spacing="2">
+              <TextBlock Text="BUILD" Classes="eyebrow"/>
+              <TextBlock Text="{Binding VersionText}" Classes="h3"/>
+            </StackPanel>
+            <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
+                       Text="osXos ships one binary per operating system from one codebase. The categories and tools you see are the ones for the platform this copy is running on."/>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

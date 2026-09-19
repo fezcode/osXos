@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A throwaway harness: renders the real windows off-screen with Skia so the
+       design can be checked without a window ever appearing on anyone's desktop.
+       Not referenced by the app and not shipped. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>OsXos.Shots</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Skia" Version="11.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\osXos.csproj" />
+  </ItemGroup>
+</Project>

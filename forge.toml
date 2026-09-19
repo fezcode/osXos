@@ -1,0 +1,111 @@
+# osXos installer -- built with Forge (https://github.com/fezcode/Forge)
+#
+#   .\installer.ps1                publish + build dist/installer/osXos-Setup-<version>.exe
+#
+# Forge targets Windows only, so this file covers the Windows build. The macOS and
+# Linux builds ship as tarballs of dist/<rid> from build.ps1.
+#
+# Keep [app] version in step with <Version> in osXos.csproj -- version.ps1 does
+# that, and installer.ps1 refuses to package a mismatch.
+
+[app]
+name    = "osXos"
+version = "0.1.0"
+id      = "com.fezcode.osxos"
+icon    = "Assets/icon.ico"
+
+[meta]
+publisher   = "Fezcode"
+homepage    = "https://github.com/fezcode/osXos"
+support_url = "https://github.com/fezcode/osXos/issues"
+comments    = "System utilities that explain themselves before they run"
+
+[ui]
+# available themes: atelier, aurora, console, mica
+theme        = "mica"
+window_title = "osXos ${app.version} Setup"
+
+[install]
+default_dir = "${LOCALAPPDATA}/Programs/osXos"
+
+[uninstall]
+# Nothing user-owned lives in the install directory.
+keep = []
+
+# Theme, font and behaviour choices. A plain uninstall leaves them alone; the
+# uninstaller offers "Also remove my settings" (--purge-settings when silent).
+settings_dirs = ["${APPDATA}/fezcode/osxos"]
+
+[[steps]]
+type  = "welcome"
+title = "osXos ${app.version}"
+body  = "This wizard will install osXos ${app.version} on your computer.\n\nosXos collects the small maintenance jobs you would otherwise do from a terminal -- clearing the icon cache, emptying the temp folder, flushing DNS -- and gives each one a window that explains exactly what it will do before it does it.\n\nEvery tool runs inside your own user account. osXos never asks for administrator rights.\n\nClick Next to continue."
+
+[[steps]]
+type  = "license"
+title = "License Agreement"
+body  = "osXos is released under the MIT License. Please review the terms below before continuing."
+file  = "LICENSE"
+
+[[steps]]
+type  = "folder"
+title = "Select Folder"
+body  = "Choose where to install osXos ${app.version}."
+
+[[steps]]
+type  = "shortcuts"
+title = "Select Optional Tasks"
+body  = "Check the items you would like the installer to perform."
+
+[[steps]]
+type  = "install"
+title = "Installing..."
+body  = "Copying files to your system."
+
+[[steps]]
+type  = "finish"
+title = "Installation Complete"
+body  = "osXos has been installed successfully.\n\nEvery tool opens in its own window with three stages: Explain lists the steps, Review shows what was actually found on this machine, and Result reports what happened. Nothing is changed until you press the button on Review.\n\nYour settings live in %APPDATA%\\fezcode\\osxos and stay there if you ever uninstall, unless you ask for them to go too.\n\nClick Finish to close the installer."
+
+[[steps.launches]]
+kind    = "app"
+target  = "${INSTALLDIR}/osXos.exe"
+label   = "Run osXos after install"
+checked = true
+
+# Application payload -- the self-contained build.
+[[dirs]]
+src = "dist/win-x64"
+dst = "${INSTALLDIR}"
+
+# Desktop and Start Menu shortcuts
+[[shortcuts]]
+target   = "${INSTALLDIR}/osXos.exe"
+location = "${DESKTOP}/osXos.lnk"
+name     = "osXos"
+icon     = "${INSTALLDIR}/osXos.exe"
+label    = "Create Desktop Shortcut"
+optional = true
+default  = true
+
+[[shortcuts]]
+target   = "${INSTALLDIR}/osXos.exe"
+location = "${STARTMENU}/osXos/osXos.lnk"
+name     = "osXos"
+icon     = "${INSTALLDIR}/osXos.exe"
+label    = "Create Start Menu Entry"
+optional = true
+default  = true
+
+# Registry entries
+[[registry]]
+hive  = "HKCU"
+key   = "Software\\Fezcode\\osXos"
+value = "InstallDir"
+data  = "${INSTALLDIR}"
+
+[[registry]]
+hive  = "HKCU"
+key   = "Software\\Fezcode\\osXos"
+value = "Version"
+data  = "0.1.0"

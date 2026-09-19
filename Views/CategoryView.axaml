@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:OsXos.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="880" d:DesignHeight="700"
+             x:Class="OsXos.Views.CategoryView"
+             x:DataType="vm:CategoryViewModel">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- ========================================================= -->
+    <!-- COMMAND BAR                                               -->
+    <!-- ========================================================= -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource BgTopBar}"
+            BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
+            Padding="24,14">
+      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+        <Border Width="38" Height="38" CornerRadius="9" Margin="0,0,13,0"
+                Background="{DynamicResource AccentMuted}"
+                BorderBrush="{DynamicResource Line}" BorderThickness="1">
+          <PathIcon Data="{Binding Icon}" Width="17" Height="17" Foreground="{DynamicResource Accent}"/>
+        </Border>
+
+        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Name}" Classes="h1"/>
+          <TextBlock FontSize="12" Classes="muted">
+            <Run Text="{Binding CountText}"/><Run Text=" · "/><Run Text="{Binding OsName}"/>
+          </TextBlock>
+        </StackPanel>
+
+        <Border Grid.Column="2" Background="{DynamicResource SurfaceHover}" CornerRadius="6"
+                Padding="9,4" BorderBrush="{DynamicResource Line}" BorderThickness="1"
+                VerticalAlignment="Center"
+                ToolTip.Tip="Every tool here runs entirely within your own user account.">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="{StaticResource IconPrivacy}" Width="11" Height="11"
+                      Foreground="{DynamicResource Green}" VerticalAlignment="Center"/>
+            <TextBlock Text="No elevation needed" FontSize="11" FontWeight="SemiBold"
+                       Classes="muted" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- ========================================================= -->
+    <!-- TOOL CARDS                                                -->
+    <!-- ========================================================= -->
+    <ScrollViewer Grid.Row="1">
+      <ItemsControl ItemsSource="{Binding Cards}" Margin="24,18,24,22">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ToolCardViewModel">
+            <!-- The whole card is the button: a tool has exactly one action from
+                 here, which is to open its window, so a separate Run target would
+                 only be a smaller version of the same click. -->
+            <Button Classes="CardHit" Command="{Binding OpenCommand}"
+                    HorizontalAlignment="Stretch" Margin="0,0,0,10">
+              <Border Classes="card" Padding="16,14">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                  <Border Width="36" Height="36" CornerRadius="9" Margin="0,0,14,0"
+                          Background="{DynamicResource SurfaceHover}"
+                          BorderBrush="{DynamicResource Line}" BorderThickness="1"
+                          VerticalAlignment="Center">
+                    <PathIcon Data="{Binding Icon}" Width="16" Height="16"
+                              Foreground="{DynamicResource Accent}"/>
+                  </Border>
+
+                  <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold"
+                               Foreground="{DynamicResource Text}"/>
+                    <TextBlock Text="{Binding Summary}" FontSize="12" Classes="muted"
+                               TextWrapping="Wrap"/>
+                  </StackPanel>
+
+                  <!-- The step count doubles as a promise: this tool explains itself
+                       before it does anything. -->
+                  <Border Grid.Column="2" Background="{DynamicResource SurfaceHover}" CornerRadius="5"
+                          Padding="8,3" BorderBrush="{DynamicResource Line}" BorderThickness="1"
+                          VerticalAlignment="Center" Margin="14,0,0,0"
+                          ToolTip.Tip="Opens a window that explains each step before anything runs.">
+                    <TextBlock Text="{Binding StepCountText}" FontSize="10" Classes="mono dim"/>
+                  </Border>
+
+                  <PathIcon Grid.Column="3" Data="{StaticResource IconChevronRight}"
+                            Width="12" Height="12" Foreground="{DynamicResource Dim}"
+                            VerticalAlignment="Center" Margin="12,0,2,0"/>
+                </Grid>
+              </Border>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

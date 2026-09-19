@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 256 256">
+<title>osXos application icon</title>
+<defs><linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+<stop stop-color="#204234"/><stop offset="1" stop-color="#122A20"/>
+</linearGradient></defs>
+<rect x="16" y="16" width="224" height="224" rx="52" fill="url(#tile)"/>
+<polygon points="89.60,70.40 128.00,108.80 166.40,70.40 185.60,89.60 147.20,128.00 185.60,166.40 166.40,185.60 128.00,147.20 89.60,185.60 70.40,166.40 108.80,128.00 70.40,89.60" fill="#E8890B"/>
+</svg>

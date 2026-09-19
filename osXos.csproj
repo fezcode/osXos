@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Single source of truth for the version: the About panel and Settings read it
+         back off the assembly, and forge.toml must be kept in step with it. -->
+    <Version>0.1.0</Version>
+    <Company>Fezcode</Company>
+    <Product>osXos</Product>
+    <AssemblyName>osXos</AssemblyName>
+    <RootNamespace>OsXos</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <!-- Unlike Cogas, osXos is NOT pinned to Windows: the same assembly runs on macOS
+       and Linux and picks its tool set at startup. The Windows-only tools carry
+       [SupportedOSPlatform("windows")] on the class instead, so CA1416 still guards
+       the registry and process calls without grounding the whole app. -->
+
+  <!-- The test and screenshot projects live under Tests\ inside this folder, so the
+       SDK's default **\*.cs glob would otherwise compile them (and their obj\ output)
+       into the app. Note Tools\ is source, not scripts: the icon generator lives in
+       scripts\ precisely because Windows would treat a tools\ folder as the same
+       directory. -->
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+    <AvaloniaXaml Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.0" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.0">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <!-- Pulled in transitively by Avalonia for Linux/DBus. Avalonia 11.1.0 asks for
+         0.16.0, which carries GHSA-xrw6-gwf8-vvr9 (High). osXos really does ship a
+         Linux build, so this pin matters here rather than merely keeping an audit
+         clean. -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
+  </ItemGroup>
+</Project>
