@@ -1,6 +1,6 @@
 # osXos
 
-![osXos](Assets/banner.png)
+![osXos](Assets/banner.svg)
 
 **osXos** collects the small maintenance jobs you would otherwise do from a terminal — clearing the icon cache, emptying the temp folder, flushing DNS — and gives each one a window that explains exactly what it will do before it does it.
 
@@ -25,6 +25,18 @@ Every tool opens in its own window with three stages.
 The inspection runs while you read the steps, so Review is there when you get to it. **Nothing on your system changes until you press the button on Review.**
 
 When a tool cannot do anything useful here — no cache to clear, a resolver it does not recognise — Review says so plainly and the action is disabled. osXos never reports success for a job it did not do.
+
+## Menu bar
+
+osXos describes itself as a menu once — an **osXos** menu, **Tools** (every tool, grouped by category, two clicks from anywhere), **View** and **Help** — and then draws it wherever the platform keeps menus:
+
+| OS | Where the menus go |
+|---|---|
+| **macOS** | the real system menu bar along the top of the screen. The osXos menu becomes the application menu, so About, Settings (⌘,) and Quit (⌘Q) land where macOS users expect them |
+| **Windows** | Windows has no menu bar of its own, so osXos publishes to [Hisashi](https://github.com/fezcode/Hisashi) over the hoswl pipe. Nothing happens if Hisashi is not running — the client just retries quietly |
+| **Linux** | offered to the desktop's global menu over DBus, where one exists (KDE, Unity, GNOME with AppIndicator). Nothing happens and nothing breaks where one does not |
+
+**Settings → Menu Bar** turns it off on any of the three. The card explains what that means on the OS you are actually running.
 
 ## Tools
 
@@ -61,6 +73,8 @@ Every tool runs entirely within your own user account. **No UAC, no sudo, no pol
 
 Each OS defines six categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands.
 
+![Settings, with all nine palettes](Assets/screenshot-settings.png)
+
 ## Themes
 
 Nine editorial palettes and seven typefaces, switchable live, shared with Cogas. Settings, theme and behaviour live in a plain JSON file you can read and edit:
@@ -86,7 +100,7 @@ cd osXos
 dotnet run
 ```
 
-Run the tests — the tool catalogue, file sweeping, settings and the exact commands every shell-driven tool builds. No window is shown:
+Run the tests — the tool catalogue, file sweeping, settings, the menu tree and the exact commands every shell-driven tool builds. No window is shown:
 
 ```powershell
 dotnet test Tests/osXos.Tests
@@ -121,9 +135,20 @@ Forge targets Windows, so `installer.ps1` produces `dist/installer/osXos-Setup-<
 
 The four Windows tools were run and verified on Windows 11. **The macOS and Linux tools have not been run end to end** — they were developed and unit-tested for everything that does not need their OS (paths built, exact argv, output parsing, blocked-state handling), but no Mac or Linux machine was available. Treat those eight as untested against a real system until someone runs them.
 
-## Application icon
+The same goes for the menu bar. The tree is built and converted for real on both paths — the native `NativeMenu` is constructed and walked in the screenshot harness, and the hoswl translation is unit-tested — but **it has not been seen in the macOS menu bar or in a Linux global menu**, and Hisashi was not running here to confirm the Windows path end to end.
 
-The icon design lives in `scripts/make-icon.py`. Run it with Python and Pillow to regenerate the SVG, PNG previews and seven-resolution Windows ICO. The app embeds these assets, so the generator is only needed when changing the design. (It is `scripts/` rather than Cogas's `tools/` because `Tools/` here is source, and Windows would treat the two as one directory.)
+## Artwork
+
+Both pieces are generated, so neither drifts from the palette:
+
+| Script | Produces | Needs |
+|---|---|---|
+| `scripts/make-icon.py` | `Assets/icon.svg`, PNG previews, the seven-resolution Windows ICO | Pillow |
+| `scripts/make-banner.py` | `Assets/banner.svg` — the banner above | fonttools |
+
+The banner's wordmark is emitted as real glyph outlines rather than a `<text>` element. GitHub renders README SVGs inside an `<img>`, which cannot load a font, so a text element would show Playfair here and something else everywhere else.
+
+The app embeds the icon assets, so the generators are only needed when the design changes. They live in `scripts/` rather than Cogas's `tools/` because `Tools/` here is source, and Windows treats the two as one directory.
 
 ## License
 

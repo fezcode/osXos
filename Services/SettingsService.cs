@@ -19,6 +19,13 @@ public sealed record SettingsData
     /// </summary>
     public bool AlwaysExplain { get; init; } = true;
 
+    /// <summary>
+    /// Whether osXos publishes its menus to the platform's menu bar — the system bar
+    /// on macOS, Hisashi on Windows, the desktop's DBus export on Linux. On by
+    /// default: where there is nowhere to draw them it costs nothing and shows nothing.
+    /// </summary>
+    public bool MenuBar { get; init; } = true;
+
     /// <summary>Sidebar width in pixels, or null when it has never been dragged.</summary>
     public double? SidebarWidth { get; init; }
 }
@@ -87,5 +94,6 @@ public sealed class SettingsService
     public string Theme => _data.Theme;
     public string Font => _data.Font;
     public bool AlwaysExplain => _data.AlwaysExplain;
+    public bool MenuBar => _data.MenuBar;
     public double? SidebarWidth => _data.SidebarWidth;
 }

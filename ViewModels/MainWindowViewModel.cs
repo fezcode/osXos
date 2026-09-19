@@ -258,11 +258,19 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     // ---- opening a tool ----
 
-    async Task OpenToolAsync(ITool tool)
+    /// <summary>Opens a tool's window. Public because the menu bar opens tools too.</summary>
+    public async Task OpenToolAsync(ITool tool)
     {
         if (ShowToolWindow is not { } show) return;
         var vm = new ToolWindowViewModel(tool, _services.OS, _services.Settings.AlwaysExplain);
         await show(tool, vm);
+    }
+
+    /// <summary>Navigates to Settings, honouring nothing special — the nav guard only
+    /// fires on the way out of Settings, not into it.</summary>
+    public void GoToSettings()
+    {
+        if (NavItems.FirstOrDefault(n => n.Vm == Settings) is { } nav) SelectedNav = nav;
     }
 
     public static void OpenUrl(string url)

@@ -23,6 +23,7 @@ public sealed class SettingsViewModel : ViewModelBase
     string _savedThemeKey;
     string _savedFontKey;
     bool _savedAlwaysExplain;
+    bool _savedMenuBar;
 
     public SettingsViewModel(AppServices services)
     {
@@ -31,10 +32,12 @@ public sealed class SettingsViewModel : ViewModelBase
         _savedThemeKey = services.Settings.Theme;
         _savedFontKey = services.Settings.Font;
         _savedAlwaysExplain = services.Settings.AlwaysExplain;
+        _savedMenuBar = services.Settings.MenuBar;
 
         _selectedTheme = ThemeCatalog.FindTheme(_savedThemeKey);
         _selectedFont = ThemeCatalog.FindFont(_savedFontKey);
         _alwaysExplain = _savedAlwaysExplain;
+        _menuBar = _savedMenuBar;
 
         var version = typeof(SettingsViewModel).Assembly.GetName().Version;
         VersionText = $"osXos v{version?.ToString(3) ?? "dev"}";
@@ -94,6 +97,54 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
+    bool _menuBar;
+    public bool MenuBar
+    {
+        get => _menuBar;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _menuBar, value);
+            // Applied live, like the theme: the bar appears or clears as you click,
+            // and Save only decides whether that survives a restart.
+            MenuBarChanged?.Invoke(value);
+            UpdateDirtyState();
+        }
+    }
+
+    /// <summary>Set by MenuBarService so the checkbox reaches whichever bridge is live.</summary>
+    public Action<bool>? MenuBarChanged { get; set; }
+
+    /// <summary>What the menu bar card should say, which is different on every OS.</summary>
+    public string MenuBarTitle => _services.OS switch
+    {
+        Tools.OSKind.MacOS => "macOS Menu Bar",
+        Tools.OSKind.Linux => "Global Menu",
+        _ => "Hisashi Menubar",
+    };
+
+    public string MenuBarLabel => _services.OS switch
+    {
+        Tools.OSKind.MacOS => "Show osXos menus in the macOS menu bar",
+        Tools.OSKind.Linux => "Export osXos menus to the desktop global menu",
+        _ => "Show osXos menus in the Hisashi menubar",
+    };
+
+    public string MenuBarDescription => _services.OS switch
+    {
+        Tools.OSKind.MacOS =>
+            "osXos fills the menu bar along the top of the screen with its own osXos, Tools, View and Help menus. "
+            + "Every tool is reachable from Tools without touching the sidebar. Turning this off leaves the standard "
+            + "menu bar macOS provides for any application.",
+        Tools.OSKind.Linux =>
+            "osXos offers its osXos, Tools, View and Help menus to the desktop's global menu over DBus — the panel "
+            + "applet on KDE and Unity, or the AppIndicator extension on GNOME. On a desktop without a global menu "
+            + "nothing happens and nothing breaks.",
+        _ =>
+            "Windows has no menu bar of its own, so osXos publishes its menus to Hisashi, which puts a macOS-style "
+            + "menubar across the top of the screen. With this on, Hisashi shows osXos's osXos, Tools, View and Help "
+            + "menus whenever an osXos window is in front. Nothing happens if Hisashi is not running.",
+    };
+
     // ---- local data ----
 
     public string DataDir => _services.DataDir;
@@ -151,7 +202,8 @@ public sealed class SettingsViewModel : ViewModelBase
     void UpdateDirtyState() =>
         IsDirty = (SelectedTheme?.Key ?? "") != _savedThemeKey ||
                   (SelectedFont?.Key ?? "") != _savedFontKey ||
-                  AlwaysExplain != _savedAlwaysExplain;
+                  AlwaysExplain != _savedAlwaysExplain ||
+                  MenuBar != _savedMenuBar;
 
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -168,6 +220,7 @@ public sealed class SettingsViewModel : ViewModelBase
             Theme = theme,
             Font = font,
             AlwaysExplain = AlwaysExplain,
+            MenuBar = MenuBar,
         });
 
         if (SelectedTheme != null) ThemeManager.ApplyTheme(SelectedTheme);
@@ -179,6 +232,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _savedThemeKey = theme;
         _savedFontKey = font;
         _savedAlwaysExplain = AlwaysExplain;
+        _savedMenuBar = MenuBar;
         IsDirty = false;
 
         Status = ok
@@ -193,6 +247,7 @@ public sealed class SettingsViewModel : ViewModelBase
         SelectedTheme = ThemeCatalog.FindTheme(_savedThemeKey);
         SelectedFont = ThemeCatalog.FindFont(_savedFontKey);
         AlwaysExplain = _savedAlwaysExplain;
+        MenuBar = _savedMenuBar;
 
         ThemeManager.ApplyTheme(SelectedTheme);
         ThemeManager.ApplyFont(SelectedFont);

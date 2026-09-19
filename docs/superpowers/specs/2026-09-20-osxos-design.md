@@ -15,6 +15,7 @@ builds; each shows the tools and category names for the OS it is running on.
 | Name | `osXos`, mixed case, set in Playfair in the sidebar where Cogas sets `COGAS`. |
 | Destructive actions | Preview then confirm. Nothing changes until the user acts on a preview they have seen. |
 | Per-tool explainer | A detached window per tool, staged Explain → Review → Result. |
+| Menu bar | macOS uses the real system menu bar; Windows publishes to Hisashi over hoswl; Linux offers a DBus global menu. Toggleable on all three. |
 
 ## Architecture
 
@@ -82,6 +83,25 @@ categories, and the About panel.
 `CanResize=False`, `CenterOwner`, Mica hint, `Auto,*,Auto` grid, `ShowDialog`). One window
 class serves all tools; only the view model differs.
 
+## The menu bar
+
+`AppMenuModel` describes osXos as a menu once and answers every id once. Two bridges
+translate from it — `NativeMenuBridge` to Avalonia's `NativeMenu`, `HisashiMenuBridge`
+to hoswl nodes — and `MenuBarService` picks one per platform. Describing the menu twice
+would guarantee the two drifted, which is the whole reason for the neutral tree.
+
+The Tools menu is generated from the registry, so a new tool appears in the menu bar
+with no menu code touched. A test walks the built tree and asserts every static id it
+produces is one `Invoke` answers; a dead menu row is not noticed until a user clicks it.
+
+`AppMenuNode.Shortcut` is a display hint that `NativeMenuBridge.TryGesture` converts to
+a real `KeyGesture` on macOS, dropping anything that will not parse — a menu row with no
+shortcut is fine, one with the wrong shortcut is a trap. The hints themselves are
+platform-aware: Alt+F4 does not exist on macOS and Cmd does not exist on Windows.
+
+Turning the setting off clears osXos's menus rather than tearing the bar down, so a Mac
+falls back to the default menu bar Avalonia provides instead of having none.
+
 ## Storage
 
 `SettingsData` as JSON under `SpecialFolder.ApplicationData/fezcode/osxos`, which resolves
@@ -94,20 +114,22 @@ rather than throwing.
 ## What is deliberately not here
 
 - **Elevation.** See above.
-- **Hisashi menubar integration.** Cogas publishes menus over the hoswl pipe; that client
-  is Windows-only and this app is not.
 - **macOS and Linux installers.** Forge targets Windows. Those builds ship as tarballs.
 - **The other two categories per OS.** System, Privacy, Developer, Packages and Services
   are named in the taxonomy and will appear when a tool lands in them.
 
 ## Verification
 
-- 120 unit tests: catalogue well-formedness across all three platforms, category
+- 141 unit tests: catalogue well-formedness across all three platforms, category
   derivation and ordering, search, file sweeping against temp directories (including a
   genuinely locked file), settings round-trip and corruption recovery, theme catalogue
-  integrity, and the exact argv of every shell-driven tool.
+  integrity, the exact argv of every shell-driven tool, and the menu tree — its shape,
+  its platform-specific shortcut hints, the hoswl translation and gesture parsing.
 - `Tests/osXos.Shots` renders the real windows off-screen with Skia, so the design was
   reviewed without a window appearing on the user's desktop.
 - **The four Windows tools were verified on Windows 11. The eight macOS and Linux tools
   were not run end to end** — no such machine was available. This is stated in the README
   rather than left for someone to discover.
+- The menu bar is built and converted for real on both paths (the harness constructs and
+  walks the native menu; the hoswl translation is unit-tested), but **has not been seen
+  in a macOS menu bar or a Linux global menu**, and Hisashi was not running here.

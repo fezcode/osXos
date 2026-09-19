@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using OsXos;
+using OsXos.Menus;
 using OsXos.Models;
 using OsXos.Services;
 using OsXos.Tools;
@@ -58,6 +59,12 @@ static class Program
         settingsVm.SelectedNav = settingsVm.NavItems[^1];
         Shoot("settings", new MainWindow { DataContext = settingsVm }, 1180, 760);
 
+        // Tall enough that the whole settings stream is on one canvas: the cards
+        // below the fold are exactly the ones a scrolled screenshot never shows.
+        var tallVm = new MainWindowViewModel(services);
+        tallVm.SelectedNav = tallVm.NavItems[^1];
+        Shoot("settings-tall", new MainWindow { DataContext = tallVm }, 1180, 1560);
+
         var aboutVm = new MainWindowViewModel(services);
         aboutVm.OpenAboutCommand.Execute().Subscribe(_ => { });
         Shoot("about", new MainWindow { DataContext = aboutVm }, 1180, 760);
@@ -66,6 +73,10 @@ static class Program
         var searchVm = new MainWindowViewModel(services);
         searchVm.Query = "cache";
         Shoot("search", new MainWindow { DataContext = searchVm }, 1180, 760);
+
+        // Build the native menu for real. This cannot prove macOS *draws* it, but it
+        // does prove the tree converts without throwing and that every row survives.
+        DumpNativeMenu(services);
 
         // The tool window, at each of its three stages.
         var tool = services.Tools.Tools.First(t => t.Id == "windows.icon-cache");
@@ -82,6 +93,33 @@ static class Program
             new BlockedStub(), services.OS, alwaysExplain: false);
         Pump();
         Shoot("tool-blocked", new ToolWindow { DataContext = blocked }, 660, 580);
+    }
+
+    static void DumpNativeMenu(AppServices services)
+    {
+        var vm = new MainWindowViewModel(services);
+        var model = new AppMenuModel(vm, services.Tools, services.OS);
+        var native = NativeMenuBridge.Build(model);
+
+        Console.WriteLine("  native menu:");
+        void Walk(Avalonia.Controls.NativeMenu menu, int depth)
+        {
+            foreach (var entry in menu.Items)
+            {
+                if (entry is Avalonia.Controls.NativeMenuItemSeparator)
+                {
+                    Console.WriteLine(new string(' ', 4 + depth * 2) + "---");
+                    continue;
+                }
+                var item = (Avalonia.Controls.NativeMenuItem)entry;
+                var gesture = item.Gesture != null ? "  [" + item.Gesture + "]" : "";
+                var check = item.ToggleType != Avalonia.Controls.NativeMenuItemToggleType.None
+                    ? (item.IsChecked ? " (on)" : " (off)") : "";
+                Console.WriteLine(new string(' ', 4 + depth * 2) + item.Header + gesture + check);
+                if (item.Menu != null) Walk(item.Menu, depth + 1);
+            }
+        }
+        Walk(native, 0);
     }
 
     /// <summary>Lets the inspection tasks queued on the dispatcher finish.</summary>

@@ -180,7 +180,22 @@
           </StackPanel>
         </Border>
 
-        <!-- CARD 3: LOCAL DATA -->
+        <!-- CARD 3: MENU BAR -->
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Text="MENU BAR" Classes="eyebrow"/>
+              <TextBlock Text="{Binding MenuBarTitle}" Classes="h3"/>
+            </StackPanel>
+
+            <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
+                       Text="{Binding MenuBarDescription}"/>
+
+            <CheckBox IsChecked="{Binding MenuBar}" Content="{Binding MenuBarLabel}"/>
+          </StackPanel>
+        </Border>
+
+        <!-- CARD 4: LOCAL DATA -->
         <Border Classes="card">
           <StackPanel Spacing="12">
             <StackPanel Spacing="2">
@@ -216,7 +231,7 @@
           </StackPanel>
         </Border>
 
-        <!-- CARD 4: ABOUT THIS BUILD -->
+        <!-- CARD 5: ABOUT THIS BUILD -->
         <Border Classes="card">
           <StackPanel Spacing="10">
             <StackPanel Spacing="2">
