@@ -144,6 +144,10 @@
         <!-- Bundled Luxury Serif Font Family for Brand Logo -->
         <FontFamily x:Key="BrandFontFamily">avares://osXos/Assets/Fonts/PlayfairDisplay.ttf#Playfair Display, Playfair Display, Georgia, Garamond, serif</FontFamily>
 
+        <!-- The sidebar and About lockup. Exo's X is geometric and angular, which is
+             the same X the app mark draws, so the wordmark and the icon agree. -->
+        <FontFamily x:Key="WordmarkFontFamily">avares://osXos/Assets/Fonts/Exo.ttf#Exo, Exo, Bahnschrift, Segoe UI Variable Display, sans-serif</FontFamily>
+
         <!-- List Selection Overrides -->
         <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#1AD97706"/>
         <SolidColorBrush x:Key="SystemControlHighlightListMediumBrush" Color="#26D97706"/>
@@ -476,6 +480,80 @@
         </Style>
         <Style Selector="Button.SidebarAbout:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SidebarHover}"/>
+        </Style>
+
+        <!-- ========================================================= -->
+        <!-- PLAIN LIST                                                -->
+        <!-- ========================================================= -->
+
+        <!-- A read-only list that virtualizes. An ItemsControl inside a ScrollViewer
+             does not: the ScrollViewer hands it infinite height, so it materializes
+             every row up front. With a temp folder holding 40,000 entries that froze
+             the window outright. ListBox brings its own ScrollViewer and
+             VirtualizingStackPanel, and these setters take the selection chrome back
+             off so it still reads as a plain list rather than a picker. -->
+        <Style Selector="ListBox.plain">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.plain ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
+        </Style>
+        <Style Selector="ListBox.plain ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBox.plain ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+        </Style>
+
+        <!-- ========================================================= -->
+        <!-- PROGRESS                                                  -->
+        <!-- ========================================================= -->
+
+        <Style Selector="ProgressBar.tool">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="MinHeight" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Background" Value="{DynamicResource Line}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+        </Style>
+
+        <!-- ========================================================= -->
+        <!-- BUTTON ICON INK                                           -->
+        <!-- ========================================================= -->
+
+        <!-- A PathIcon does not inherit the button's Foreground. Avalonia's own
+             control theme gives PathIcon an explicit Foreground, and an explicit
+             value beats an inherited one - so an icon dropped into a dark accent
+             button renders in the body ink and disappears against it, while the
+             label beside it is correctly white. Every button class that sets its
+             own Foreground therefore has to say so again for its icons.
+
+             An icon that sets Foreground on the element itself - the window
+             controls, the sidebar chevrons - still wins over these. -->
+        <Style Selector="Button.Accent PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+        </Style>
+        <Style Selector="Button.Play PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+        </Style>
+        <Style Selector="Button.Danger PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Red}"/>
+        </Style>
+        <Style Selector="Button.Modern PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+        </Style>
+        <Style Selector="Button.Ghost PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+        </Style>
+        <!-- Ghost lifts its label to Text on hover; the icon follows it. -->
+        <Style Selector="Button.Ghost:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
         </Style>
 
         <!-- ========================================================= -->

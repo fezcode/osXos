@@ -93,8 +93,13 @@ steps in order and stop/report any failure before proceeding:
 - Every tool opens in the one shared `ToolWindow`, staged Explain → Review → Result.
   Do not give a tool its own view without a reason that survives being written down.
 - Categories derive from the tools that exist. Never add a "no tools yet" placeholder.
-- No elevation anywhere: no UAC, no sudo, no polkit. A job that genuinely needs root
-  shows the command instead of asking for rights.
+- Elevation is plumbed but unused. Every tool shipped today works inside the user's
+  own account, and a test asserts that. A tool that genuinely cannot must set
+  `RequiresElevation` (or set `NeedsElevation` on its preview when only this run
+  needs it), which makes the Review stage say so before the OS prompt appears. Go
+  through `IElevationService`, which elevates one named command — osXos never
+  relaunches itself as administrator. When the first such tool lands, update that
+  test, the README and the About panel together; they currently promise no prompts.
 - The menu is described once in `Menus/AppMenuModel.cs` and translated by both
   bridges. Add rows there, never to a bridge.
 - `Tools/` is source. Scripts live in `scripts/` because Windows treats `tools/` as

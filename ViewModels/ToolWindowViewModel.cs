@@ -47,9 +47,13 @@ public sealed class ToolWindowViewModel : ViewModelBase
 
     ToolPreview? _preview;
 
-    public ToolWindowViewModel(ITool tool, OSKind os, bool alwaysExplain)
+    readonly IElevationService? _elevation;
+
+    public ToolWindowViewModel(
+        ITool tool, OSKind os, bool alwaysExplain, IElevationService? elevation = null)
     {
         _tool = tool;
+        _elevation = elevation;
 
         Title = tool.Name;
         Eyebrow = $"{CategoryCatalog.Find(os, tool.Category)?.Name ?? tool.Category.ToString()} · {CategoryCatalog.DisplayName(os)}";
@@ -63,6 +67,10 @@ public sealed class ToolWindowViewModel : ViewModelBase
         Steps = tool.Steps
             .Select((s, i) => new StepRow { Number = i + 1, Title = s.Title, Detail = s.Detail })
             .ToList();
+
+        // A tool that always needs administrator rights says so before the scan; a
+        // run that turns out to need them says so after (see ToolPreview).
+        NeedsElevation = tool.RequiresElevation;
 
         _stage = alwaysExplain ? ToolStage.Explain : ToolStage.Review;
 
@@ -160,6 +168,30 @@ public sealed class ToolWindowViewModel : ViewModelBase
         }
     }
 
+    bool _needsElevation;
+    /// <summary>
+    /// Whether this run needs administrator rights. Shown as its own notice on
+    /// Review, above the Run button, so the UAC or password prompt that follows is
+    /// never a surprise.
+    /// </summary>
+    public bool NeedsElevation
+    {
+        get => _needsElevation;
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _needsElevation, value);
+            this.RaisePropertyChanged(nameof(ShowElevationNotice));
+            this.RaisePropertyChanged(nameof(ElevationNotice));
+        }
+    }
+
+    /// <summary>Hidden once we already have the rights: there is nothing to warn about.</summary>
+    public bool ShowElevationNotice => NeedsElevation && _elevation?.IsElevated != true;
+
+    public string ElevationNotice => _elevation is { } e
+        ? e.PromptDescription
+        : "This tool needs administrator rights.";
+
     public bool HasBlocker => !string.IsNullOrEmpty(Blocker);
     public bool CanRun => !HasBlocker && !Inspecting && !Running;
 
@@ -167,11 +199,21 @@ public sealed class ToolWindowViewModel : ViewModelBase
     {
         try
         {
-            var preview = await Task.Run(() => _tool.InspectAsync(_cts.Token), _cts.Token).ConfigureAwait(true);
+            // Both the scan and the row projection run off the UI thread. A temp
+            // folder with 40,000 entries makes the projection itself measurable, and
+            // doing it on the dispatcher is the difference between a window that
+            // says "Inspecting..." and one Windows marks Not Responding.
+            var (preview, rows) = await Task.Run(async () =>
+            {
+                var p = await _tool.InspectAsync(_cts.Token).ConfigureAwait(false);
+                return (p, p.Items.Select(ToRow).ToList());
+            }, _cts.Token).ConfigureAwait(true);
+
             _preview = preview;
-            Rows = preview.Items.Select(ToRow).ToList();
+            Rows = rows;
             PreviewSummary = preview.Summary;
             Blocker = preview.Blocker;
+            NeedsElevation = _tool.RequiresElevation || preview.NeedsElevation;
         }
         catch (OperationCanceledException)
         {
@@ -208,6 +250,32 @@ public sealed class ToolWindowViewModel : ViewModelBase
         }
     }
 
+    double _progressValue;
+    /// <summary>0-100 for the bar. Meaningless while <see cref="ProgressIndeterminate"/>.</summary>
+    public double ProgressValue
+    {
+        get => _progressValue;
+        private set => this.RaiseAndSetIfChanged(ref _progressValue, value);
+    }
+
+    bool _progressIndeterminate = true;
+    /// <summary>
+    /// True until a tool reports countable work. A tool that runs one shell command
+    /// never reports, and a bar that sat at 0% would read as stuck.
+    /// </summary>
+    public bool ProgressIndeterminate
+    {
+        get => _progressIndeterminate;
+        private set => this.RaiseAndSetIfChanged(ref _progressIndeterminate, value);
+    }
+
+    string _progressText = "";
+    public string ProgressText
+    {
+        get => _progressText;
+        private set => this.RaiseAndSetIfChanged(ref _progressText, value);
+    }
+
     string _resultHeadline = "";
     public string ResultHeadline
     {
@@ -240,10 +308,19 @@ public sealed class ToolWindowViewModel : ViewModelBase
         if (_preview is null || !_preview.CanRun || Running) return;
 
         Running = true;
+        ProgressIndeterminate = true;
+        ProgressValue = 0;
+        ProgressText = "Starting...";
+
+        // Progress<T> captures the current SynchronizationContext, so every report
+        // is marshalled back to the UI thread for us.
+        var progress = new Progress<ToolProgress>(OnProgress);
+
         ToolResult result;
         try
         {
-            result = await Task.Run(() => _tool.RunAsync(_preview, _cts.Token), _cts.Token).ConfigureAwait(true);
+            result = await Task.Run(
+                () => _tool.RunAsync(_preview, _cts.Token, progress), _cts.Token).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -262,6 +339,22 @@ public sealed class ToolWindowViewModel : ViewModelBase
         ResultHeadline = result.Headline;
         ResultLines = result.Lines.ToList();
         Stage = ToolStage.Result;
+    }
+
+    void OnProgress(ToolProgress p)
+    {
+        if (p.IsCountable)
+        {
+            ProgressIndeterminate = false;
+            ProgressValue = p.Fraction * 100;
+            var of = $"{p.Done:N0} of {p.Total:N0}";
+            ProgressText = string.IsNullOrEmpty(p.Item) ? of : $"{of} — {p.Item}";
+        }
+        else
+        {
+            ProgressIndeterminate = true;
+            ProgressText = p.Item ?? "Working...";
+        }
     }
 
     public void Cancel() => _cts.Cancel();

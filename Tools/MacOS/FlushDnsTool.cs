@@ -55,7 +55,8 @@ public sealed class FlushDnsTool : ITool
             "Clears the Directory Service cache. The mDNSResponder half needs sudo and is left to you."));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var outcome = await _runner.RunAsync(Command, ct).ConfigureAwait(false);
 

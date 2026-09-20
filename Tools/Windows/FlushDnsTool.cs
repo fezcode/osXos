@@ -49,7 +49,8 @@ public sealed class FlushDnsTool : ITool
         return Task.FromResult(new ToolPreview(items, "Clears every cached DNS entry for this machine."));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var outcome = await _runner.RunAsync(Command, ct).ConfigureAwait(false);
 

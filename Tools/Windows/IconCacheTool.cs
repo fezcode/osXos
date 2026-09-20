@@ -145,7 +145,8 @@ public sealed class IconCacheTool : ITool
         return Task.FromResult(new ToolPreview(items, summary));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var lines = new List<string>();
 
@@ -154,7 +155,7 @@ public sealed class IconCacheTool : ITool
             ? $"Closed Windows Explorer ({stopped} process{(stopped == 1 ? "" : "es")})."
             : "Windows Explorer was not running.");
 
-        var sweep = FileSweep.Delete(preview.Items);
+        var sweep = FileSweep.Delete(preview.Items, progress, ct);
         lines.Add($"Deleted {sweep.Deleted} of {preview.Items.Count} files, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.");
         if (sweep.Skipped > 0)
         {

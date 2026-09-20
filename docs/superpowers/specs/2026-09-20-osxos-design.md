@@ -55,12 +55,18 @@ The two things that make the tools testable are deliberate:
 ones a tool claims. There are therefore no empty states in the app except a search that
 matches nothing, and a category appears by itself when its first tool is added.
 
-### No elevation
+### Elevation
 
-Every v1 tool works within the user's own account. This removes a whole subsystem — UAC
-relaunch, sudo prompting, polkit — from v1. Where a job genuinely needs root (the
-`mDNSResponder` half of the macOS DNS flush), the tool shows the command and says it will
-not run it.
+Every v1 tool works within the user's own account, and a test holds that line. Where a
+job genuinely needs root (the `mDNSResponder` half of the macOS DNS flush), the tool
+shows the command and says it will not run it.
+
+`IElevationService` was added once it was clear later tools would need rights. Its shape
+is deliberate: osXos elevates **one named command** — `runas` on Windows, an AppleScript
+authorisation prompt on macOS, `pkexec` on Linux — and never relaunches itself
+elevated, so the window, the settings and every other tool stay at normal rights. A tool
+declares `RequiresElevation`, or a preview sets `NeedsElevation` when only this
+particular run needs it, and the Review stage names the prompt before it appears.
 
 ## The shell
 
@@ -113,7 +119,6 @@ rather than throwing.
 
 ## What is deliberately not here
 
-- **Elevation.** See above.
 - **macOS and Linux installers.** Forge targets Windows. Those builds ship as tarballs.
 - **The other two categories per OS.** System, Privacy, Developer, Packages and Services
   are named in the taxonomy and will appear when a tool lands in them.

@@ -46,6 +46,13 @@ public sealed record ToolPreview(
     string? Blocker = null)
 {
     /// <summary>
+    /// Set when the inspection found that this particular run needs administrator
+    /// rights, even though the tool does not always. A cache folder owned by another
+    /// user is the shape of this: the tool is ordinary, today's work is not.
+    /// </summary>
+    public bool NeedsElevation { get; init; }
+
+    /// <summary>
     /// False when the tool cannot proceed on this machine — systemd-resolved absent,
     /// a setting already in the desired state, nothing found to clean. The Review
     /// stage disables Run and shows <see cref="Blocker"/> instead of pretending.
@@ -55,6 +62,17 @@ public sealed record ToolPreview(
     public long TotalBytes => Items.Sum(i => i.Bytes ?? 0);
 
     public static ToolPreview Blocked(string reason) => new(Array.Empty<PreviewItem>(), reason, reason);
+}
+
+/// <summary>
+/// How far a run has got. <paramref name="Total"/> is 0 when the work cannot be
+/// counted — a shell command either finishes or does not — and the UI shows an
+/// indeterminate bar for that rather than inventing a percentage.
+/// </summary>
+public readonly record struct ToolProgress(int Done, int Total, string? Item = null)
+{
+    public bool IsCountable => Total > 0;
+    public double Fraction => Total > 0 ? Math.Clamp((double)Done / Total, 0, 1) : 0;
 }
 
 /// <summary>What actually happened, shown on the Result stage.</summary>
@@ -94,10 +112,25 @@ public interface ITool
     /// <summary>Whether Run is styled as a destructive action.</summary>
     bool IsDestructive { get; }
 
+    /// <summary>
+    /// Whether this tool cannot do its job inside the user's own account. A default
+    /// member rather than a required one: every tool shipped so far works unelevated,
+    /// and that stays the norm - a tool overriding this is making a claim it should
+    /// have to write down.
+    /// </summary>
+    bool RequiresElevation => false;
+
     /// <summary>The Explain stage, in order.</summary>
     IReadOnlyList<ToolStep> Steps { get; }
 
     Task<ToolPreview> InspectAsync(CancellationToken ct);
 
-    Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct);
+    /// <summary>
+    /// Acts on a preview the user has seen. <paramref name="progress"/> is optional:
+    /// a tool whose work is one fast command simply never reports, and the UI shows
+    /// an indeterminate bar. Anything that loops over thousands of files must report,
+    /// or the window looks frozen for as long as it runs.
+    /// </summary>
+    Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null);
 }

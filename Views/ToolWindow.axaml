@@ -114,7 +114,7 @@
       </ScrollViewer>
 
       <!-- ===== REVIEW ===== -->
-      <Grid IsVisible="{Binding IsReview}" RowDefinitions="Auto,Auto,*,Auto">
+      <Grid IsVisible="{Binding IsReview}" RowDefinitions="Auto,Auto,Auto,*,Auto">
 
         <!-- Warning, for anything that restarts the shell or cannot be undone -->
         <Border Grid.Row="0" IsVisible="{Binding HasWarning}"
@@ -128,8 +128,25 @@
           </Grid>
         </Border>
 
+        <!-- Administrator notice. Separate from the gold warning: that one is about
+             what the tool will do, this one is about the prompt the OS is going to
+             put in front of you first. -->
+        <Border Grid.Row="1" IsVisible="{Binding ShowElevationNotice}"
+                Background="{DynamicResource CyanMuted}" BorderBrush="{DynamicResource Cyan}"
+                BorderThickness="1" CornerRadius="8" Padding="13,10" Margin="0,0,0,12">
+          <Grid ColumnDefinitions="Auto,*">
+            <PathIcon Data="{StaticResource IconPrivacy}" Width="15" Height="15"
+                      Foreground="{DynamicResource Cyan}" VerticalAlignment="Top" Margin="0,1,11,0"/>
+            <StackPanel Grid.Column="1" Spacing="3">
+              <TextBlock Text="NEEDS ADMINISTRATOR" Classes="eyebrow"/>
+              <TextBlock Text="{Binding ElevationNotice}" FontSize="12" Classes="muted"
+                         TextWrapping="Wrap" LineHeight="17"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
         <!-- Blocker: the tool cannot run here, and says exactly why -->
-        <Border Grid.Row="1" IsVisible="{Binding HasBlocker}"
+        <Border Grid.Row="2" IsVisible="{Binding HasBlocker}"
                 Background="{DynamicResource SurfaceHover}" BorderBrush="{DynamicResource LineBright}"
                 BorderThickness="1" CornerRadius="8" Padding="13,11" Margin="0,0,0,12">
           <Grid ColumnDefinitions="Auto,*">
@@ -144,7 +161,7 @@
         </Border>
 
         <!-- What was found -->
-        <Border Grid.Row="2" IsVisible="{Binding !HasBlocker}"
+        <Border Grid.Row="3" IsVisible="{Binding !HasBlocker}"
                 Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
                 BorderThickness="1" CornerRadius="8" ClipToBounds="True">
           <Grid RowDefinitions="Auto,*">
@@ -157,30 +174,51 @@
               </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="1">
-              <ItemsControl ItemsSource="{Binding Rows}" Margin="13,9,13,11">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="vm:PreviewRow">
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,7">
-                      <StackPanel Spacing="1">
-                        <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource Text}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding Detail}" FontSize="11" Classes="mono dim"
-                                   IsVisible="{Binding HasDetail}" TextWrapping="Wrap"/>
-                      </StackPanel>
-                      <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontSize="11"
-                                 Classes="mono muted" IsVisible="{Binding HasSize}"
-                                 VerticalAlignment="Top" Margin="14,0,0,0"/>
-                    </Grid>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </ScrollViewer>
+            <!-- ListBox, not ItemsControl-in-a-ScrollViewer: this list routinely
+                 holds tens of thousands of rows and has to virtualize. Rows are a
+                 fixed height for the same reason - a virtualizing panel can only
+                 estimate the scroll extent if the rows agree on a size, and wrapping
+                 text made the scrollbar jump as it scrolled. Long paths are trimmed
+                 rather than wrapped. -->
+            <ListBox Grid.Row="1" Classes="plain" ItemsSource="{Binding Rows}"
+                     Margin="13,9,13,11">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:PreviewRow">
+                  <Grid ColumnDefinitions="*,Auto" Height="38">
+                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource Text}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Detail}" FontSize="11" Classes="mono dim"
+                                 IsVisible="{Binding HasDetail}"
+                                 TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontSize="11"
+                               Classes="mono muted" IsVisible="{Binding HasSize}"
+                               VerticalAlignment="Center" Margin="14,0,0,0"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
           </Grid>
         </Border>
 
-        <TextBlock Grid.Row="3" Text="{Binding PreviewSummary}" FontSize="12" Classes="muted"
-                   TextWrapping="Wrap" Margin="2,11,0,0" IsVisible="{Binding !HasBlocker}"/>
+        <!-- The summary line becomes the progress readout while the tool runs.
+             Deleting 40,000 files with nothing on screen is indistinguishable from
+             a hang, which is exactly what it looked like. -->
+        <Panel Grid.Row="4" Margin="2,11,0,0" IsVisible="{Binding !HasBlocker}">
+          <TextBlock Text="{Binding PreviewSummary}" FontSize="12" Classes="muted"
+                     TextWrapping="Wrap" IsVisible="{Binding !Running}"/>
+
+          <StackPanel Spacing="7" IsVisible="{Binding Running}">
+            <ProgressBar Classes="tool"
+                         Minimum="0" Maximum="100"
+                         Value="{Binding ProgressValue}"
+                         IsIndeterminate="{Binding ProgressIndeterminate}"/>
+            <TextBlock Text="{Binding ProgressText}" FontSize="11" Classes="mono muted"
+                       TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+        </Panel>
       </Grid>
 
       <!-- ===== RESULT ===== -->
@@ -226,7 +264,8 @@
     <!-- ========================================================= -->
     <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Margin="0,18,0,0">
 
-      <Button Classes="Ghost" Command="{Binding BackCommand}" IsVisible="{Binding IsReview}">
+      <Button Classes="Ghost" Command="{Binding BackCommand}" IsVisible="{Binding IsReview}"
+              IsEnabled="{Binding !Running}">
         <StackPanel Orientation="Horizontal" Spacing="5">
           <PathIcon Data="{StaticResource IconChevronLeft}" Width="10" Height="10" VerticalAlignment="Center"/>
           <TextBlock Text="Back" VerticalAlignment="Center"/>

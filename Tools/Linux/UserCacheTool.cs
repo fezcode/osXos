@@ -36,7 +36,7 @@ public sealed class UserCacheTool : ITool
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {
-        var items = FileSweep.Children(_cacheDir).ToList();
+        var items = FileSweep.Children(_cacheDir, ct).ToList();
         if (items.Count == 0)
         {
             return Task.FromResult(ToolPreview.Blocked(
@@ -48,9 +48,10 @@ public sealed class UserCacheTool : ITool
             $"{items.Count} item{(items.Count == 1 ? "" : "s")} · {FileSweep.FormatBytes(total)} to reclaim · {_cacheDir}"));
     }
 
-    public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
-        var sweep = FileSweep.Delete(preview.Items);
+        var sweep = FileSweep.Delete(preview.Items, progress, ct);
         var lines = new List<string>
         {
             $"Deleted {sweep.Deleted} of {preview.Items.Count} items, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.",

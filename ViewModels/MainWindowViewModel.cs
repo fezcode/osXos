@@ -262,7 +262,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     public async Task OpenToolAsync(ITool tool)
     {
         if (ShowToolWindow is not { } show) return;
-        var vm = new ToolWindowViewModel(tool, _services.OS, _services.Settings.AlwaysExplain);
+        var vm = new ToolWindowViewModel(
+            tool, _services.OS, _services.Settings.AlwaysExplain, _services.Elevation);
         await show(tool, vm);
     }
 

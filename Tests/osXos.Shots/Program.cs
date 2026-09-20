@@ -88,6 +88,25 @@ static class Program
         Pump();
         Shoot("tool-review", new ToolWindow { DataContext = review }, 660, 580);
 
+        // A forty-thousand-row preview, which is what a real temp folder looks like
+        // and what froze the window before the list virtualized.
+        var bigSw = System.Diagnostics.Stopwatch.StartNew();
+        var big = new ToolWindowViewModel(new BigStub(40000), services.OS, alwaysExplain: false);
+        Pump();
+        Console.WriteLine($"  40k rows ready in {bigSw.ElapsedMilliseconds} ms ({big.Rows.Count} rows)");
+        var shootSw = System.Diagnostics.Stopwatch.StartNew();
+        Shoot("tool-bigsweep", new ToolWindow { DataContext = big }, 660, 580);
+        Console.WriteLine($"  40k rows rendered in {shootSw.ElapsedMilliseconds} ms");
+
+        // Mid-run, with the progress readout up.
+        var runTool = new SlowStub();
+        var running = new ToolWindowViewModel(runTool, services.OS, alwaysExplain: false);
+        Pump();
+        running.RunCommand.Execute().Subscribe(_ => { }, _ => { });
+        Pump();
+        Shoot("tool-running", new ToolWindow { DataContext = running }, 660, 580);
+        runTool.Release();
+
         // A blocked preview: the honest "nothing to do here" path.
         var blocked = new ToolWindowViewModel(
             new BlockedStub(), services.OS, alwaysExplain: false);
@@ -148,6 +167,78 @@ static class Program
         Console.WriteLine($"  {name}.png");
     }
 
+    /// <summary>A preview with tens of thousands of rows, to prove the list virtualizes.</summary>
+    sealed class BigStub : ITool
+    {
+        readonly int _count;
+        public BigStub(int count) => _count = count;
+
+        public string Id => "stub.big";
+        public OSKind Platform => OSKind.Windows;
+        public ToolCategory Category => ToolCategory.Maintenance;
+        public string Name => "Empty Temp Folder";
+        public string Summary => "Delete what installers and applications left behind in your personal temp folder.";
+        public string IconKey => "IconTrash";
+        public string? Warning => "Deleted files do not go to the Recycle Bin. Close any installer that is mid-run first - its working files are in here.";
+        public bool IsDestructive => true;
+
+        public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[]
+        {
+            new("Look in your personal temp folder", "That is %TEMP%."),
+        };
+
+        public Task<ToolPreview> InspectAsync(CancellationToken ct)
+        {
+            var items = Enumerable.Range(0, _count)
+                .Select(i => new PreviewItem(
+                    $"wct{i:X4}.tmp", @"C:\Users\you\AppData\Local\Temp\wct" + i.ToString("X4") + ".tmp", 105_472))
+                .ToList();
+            return Task.FromResult(new ToolPreview(items,
+                items.Count.ToString("N0") + @" items · 2.2 GB to reclaim · C:\Users\you\AppData\Local\Temp\"));
+        }
+
+        public Task<ToolResult> RunAsync(
+            ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null) =>
+            Task.FromResult(ToolResult.Success("done"));
+    }
+
+    /// <summary>A run that stays in flight, so the progress readout can be shot.</summary>
+    sealed class SlowStub : ITool
+    {
+        readonly SemaphoreSlim _gate = new(0);
+        public void Release() => _gate.Release();
+
+        public string Id => "stub.slow";
+        public OSKind Platform => OSKind.Windows;
+        public ToolCategory Category => ToolCategory.Maintenance;
+        public string Name => "Empty Temp Folder";
+        public string Summary => "Delete what installers and applications left behind in your personal temp folder.";
+        public string IconKey => "IconTrash";
+        public string? Warning => "Deleted files do not go to the Recycle Bin.";
+        public bool IsDestructive => true;
+
+        public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[]
+        {
+            new("Look in your personal temp folder", "That is %TEMP%."),
+        };
+
+        public Task<ToolPreview> InspectAsync(CancellationToken ct) => Task.FromResult(
+            new ToolPreview(
+                Enumerable.Range(0, 200)
+                    .Select(i => new PreviewItem("wct" + i.ToString("X4") + ".tmp",
+                        "C:/Temp/wct" + i.ToString("X4") + ".tmp", 105_472))
+                    .ToList(),
+                "40,647 items to delete"));
+
+        public async Task<ToolResult> RunAsync(
+            ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
+        {
+            progress?.Report(new ToolProgress(16_284, 40_647, "wctA479.tmp"));
+            await _gate.WaitAsync(ct).ConfigureAwait(false);
+            return ToolResult.Success("done");
+        }
+    }
+
     /// <summary>Stands in for a tool whose preview blocks, to shoot that state.</summary>
     sealed class BlockedStub : ITool
     {
@@ -169,7 +260,8 @@ static class Program
             ToolPreview.Blocked(
                 "systemd-resolved does not appear to be in use — resolvectl is not installed. If this machine caches DNS at all it is doing so through something else (dnsmasq, nscd or unbound), each of which is cleared differently, so osXos will not guess."));
 
-        public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct) =>
+        public Task<ToolResult> RunAsync(
+            ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null) =>
             throw new NotSupportedException();
     }
 }

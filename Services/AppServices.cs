@@ -15,6 +15,9 @@ public sealed class AppServices
 
     public SettingsService Settings { get; }
     public IProcessRunner Runner { get; }
+
+    /// <summary>Available for the tools that will eventually need it; none do yet.</summary>
+    public IElevationService Elevation { get; }
     public ToolRegistry Tools { get; }
     public OSKind OS { get; }
 
@@ -28,6 +31,7 @@ public sealed class AppServices
 
         Settings = new SettingsService(DataDir);
         Runner = new ProcessRunner();
+        Elevation = new ElevationService(Runner);
         OS = CategoryCatalog.CurrentOS;
         Tools = new ToolRegistry(OS, Runner);
     }

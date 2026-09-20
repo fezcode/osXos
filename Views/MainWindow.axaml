@@ -42,10 +42,17 @@
               <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
                 <PathIcon Data="{StaticResource IconBrand}" Width="22" Height="22"
                           Foreground="{DynamicResource SidebarAccent}" VerticalAlignment="Center"/>
-                <TextBlock Text="osXos" FontSize="24" FontWeight="Bold" LetterSpacing="0.5"
-                           Foreground="#FFFFFF"
-                           FontFamily="{StaticResource BrandFontFamily}"
-                           VerticalAlignment="Center"/>
+                <!-- The X is the name's hinge, so it is the one glyph that carries
+                     the accent. Set in Exo rather than the editorial serif: its X is
+                     the same angular geometry the app mark draws. Inlines rather than
+                     three TextBlocks so the runs share one baseline. -->
+                <TextBlock FontSize="26" LetterSpacing="1.2"
+                           FontFamily="{StaticResource WordmarkFontFamily}"
+                           VerticalAlignment="Center">
+                  <Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/><!--
+               --><Run Text="X" FontWeight="Bold" Foreground="{DynamicResource SidebarAccent}"/><!--
+               --><Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                </TextBlock>
               </StackPanel>
 
               <Rectangle Height="1" Fill="{DynamicResource SidebarDivider}" HorizontalAlignment="Stretch"/>
@@ -292,9 +299,13 @@
               <StackPanel Orientation="Horizontal" Spacing="13" VerticalAlignment="Center">
                 <PathIcon Data="{StaticResource IconBrand}" Width="28" Height="28"
                           Foreground="{DynamicResource Cyan}" VerticalAlignment="Center"/>
-                <TextBlock Text="osXos" FontSize="30" FontWeight="Bold"
-                           FontFamily="{StaticResource BrandFontFamily}" Foreground="#FFFFFF"
-                           VerticalAlignment="Center"/>
+                <TextBlock FontSize="34" LetterSpacing="1.6"
+                           FontFamily="{StaticResource WordmarkFontFamily}"
+                           VerticalAlignment="Center">
+                  <Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/><!--
+               --><Run Text="X" FontWeight="Bold" Foreground="{DynamicResource Cyan}"/><!--
+               --><Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                </TextBlock>
               </StackPanel>
               <TextBlock Text="SYSTEM UTILITIES FOR WINDOWS, MACOS AND LINUX" FontSize="9" FontWeight="Bold"
                          LetterSpacing="1.5" Foreground="#8FA89B"/>
@@ -332,9 +343,9 @@
               <Border Background="{DynamicResource SurfaceHover}" CornerRadius="8" Padding="14,12"
                       BorderBrush="{DynamicResource Line}" BorderThickness="1">
                 <StackPanel Spacing="6">
-                  <TextBlock Text="NO ELEVATION" Classes="eyebrow"/>
+                  <TextBlock Text="ELEVATION" Classes="eyebrow"/>
                   <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
-                             Text="Every tool in osXos works entirely within your own user account. There is no UAC prompt, no sudo, no polkit. Where a job genuinely needs administrator rights, osXos shows you the command rather than asking for them."/>
+                             Text="Every tool shipped today works entirely within your own user account — no UAC prompt, no sudo, no polkit. A tool that genuinely cannot must say so on its Review stage, and osXos elevates that one command rather than running itself as administrator."/>
                 </StackPanel>
               </Border>
 

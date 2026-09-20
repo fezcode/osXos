@@ -36,7 +36,7 @@ public sealed class TempFolderTool : ITool
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {
-        var items = FileSweep.Children(_tempDir).ToList();
+        var items = FileSweep.Children(_tempDir, ct).ToList();
 
         if (items.Count == 0)
         {
@@ -49,9 +49,10 @@ public sealed class TempFolderTool : ITool
         return Task.FromResult(new ToolPreview(items, summary));
     }
 
-    public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
-        var sweep = FileSweep.Delete(preview.Items);
+        var sweep = FileSweep.Delete(preview.Items, progress, ct);
         var lines = new List<string>
         {
             $"Deleted {sweep.Deleted} of {preview.Items.Count} items, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.",

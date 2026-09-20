@@ -40,7 +40,9 @@ osXos describes itself as a menu once — an **osXos** menu, **Tools** (every to
 
 ## Tools
 
-Every tool runs entirely within your own user account. **No UAC, no sudo, no polkit anywhere in osXos.** Where a job genuinely needs administrator rights, osXos shows you the command instead of asking for them.
+Every tool shipped today runs entirely within your own user account: **no UAC, no sudo, no polkit.** A test enforces it, so this stays true by accident of nobody noticing.
+
+Some future tools will need administrator rights, and the plumbing is in place for them. A tool that needs them declares it, the Review stage says so — naming the prompt the OS is about to show — and osXos elevates that one command rather than relaunching itself as administrator. The category header tells you which way round it is.
 
 ### Windows
 

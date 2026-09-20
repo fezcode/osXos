@@ -54,7 +54,7 @@ public sealed class IconServicesCacheTool : ITool
         {
             var path = Path.Combine(_cachesDir, name);
             if (Directory.Exists(path))
-                items.Add(new PreviewItem(name + "/", path, FileSweep.SizeOf(path)));
+                items.Add(new PreviewItem(name + "/", path, FileSweep.SizeOf(path, ct)));
         }
 
         if (items.Count == 0)
@@ -71,10 +71,11 @@ public sealed class IconServicesCacheTool : ITool
             $"{FileSweep.FormatBytes(total)} to reclaim, then Dock and Finder restart."));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         // Only the sized entries are paths; the trailing two are the commands below.
-        var sweep = FileSweep.Delete(preview.Items.Where(i => i.Bytes.HasValue));
+        var sweep = FileSweep.Delete(preview.Items.Where(i => i.Bytes.HasValue).ToList(), progress, ct);
         var lines = new List<string>
         {
             $"Deleted {sweep.Deleted} cache folder{(sweep.Deleted == 1 ? "" : "s")}, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.",

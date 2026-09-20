@@ -128,7 +128,8 @@ public sealed class HiddenFilesTool : ITool
         return Task.FromResult(new ToolPreview(items, summary));
     }
 
-    public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var turningOn = !(_settings.Hidden == 1 && _settings.HideFileExt == 0);
 

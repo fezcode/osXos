@@ -52,7 +52,8 @@ public sealed class FlushDnsTool : ITool
             "Clears the systemd-resolved cache on every network link."));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var outcome = await _runner.RunAsync(Command, ct).ConfigureAwait(false);
 

@@ -76,7 +76,8 @@ public sealed class FinderHiddenFilesTool : ITool
             || v.Equals("true", StringComparison.OrdinalIgnoreCase);
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var read = await _runner.RunAsync(ReadCommand, ct).ConfigureAwait(false);
         var turningOn = !(read.Ok && ParseShowing(read.StdOut));

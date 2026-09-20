@@ -81,13 +81,18 @@ public sealed class IconCacheRebuildTool : ITool
             $"{items.Count} icon theme{(items.Count == 1 ? "" : "s")} to rebuild in {_iconsDir}"));
     }
 
-    public async Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct)
+    public async Task<ToolResult> RunAsync(
+        ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)
     {
         var lines = new List<string>();
         int ok = 0, failed = 0;
+        var done = 0;
 
         foreach (var item in preview.Items)
         {
+            ct.ThrowIfCancellationRequested();
+            progress?.Report(new ToolProgress(done++, preview.Items.Count, item.Label));
+
             var themeDir = Path.Combine(_iconsDir, item.Label);
             var outcome = await _runner.RunAsync(CommandFor(themeDir), ct).ConfigureAwait(false);
             if (outcome.Ok)

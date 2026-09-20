@@ -46,7 +46,7 @@ public static class FileSweep
     /// any loose files at the top level. Used by the cache-clearing tools, where a user
     /// wants to see "Google/ 1.2 GB" rather than forty thousand file names.
     /// </summary>
-    public static IEnumerable<PreviewItem> Children(string dir)
+    public static IEnumerable<PreviewItem> Children(string dir, CancellationToken ct = default)
     {
         if (!Directory.Exists(dir)) yield break;
 
@@ -55,7 +55,10 @@ public static class FileSweep
         catch { yield break; }
 
         foreach (var sub in subdirs.OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
-            yield return new PreviewItem(Path.GetFileName(sub) + "/", sub, SizeOf(sub));
+        {
+            ct.ThrowIfCancellationRequested();
+            yield return new PreviewItem(Path.GetFileName(sub) + "/", sub, SizeOf(sub, ct));
+        }
 
         string[] files;
         try { files = Directory.GetFiles(dir); }
@@ -63,6 +66,7 @@ public static class FileSweep
 
         foreach (var f in files.OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
         {
+            ct.ThrowIfCancellationRequested();
             long size;
             try { size = new FileInfo(f).Length; }
             catch { continue; }
@@ -71,16 +75,21 @@ public static class FileSweep
     }
 
     /// <summary>Recursive byte total, skipping anything that cannot be read.</summary>
-    public static long SizeOf(string dir)
+    public static long SizeOf(string dir, CancellationToken ct = default)
     {
         long total = 0;
         try
         {
             foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
             {
+                ct.ThrowIfCancellationRequested();
                 try { total += new FileInfo(f).Length; }
                 catch { /* vanished or locked mid-walk */ }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -93,14 +102,32 @@ public static class FileSweep
     /// Deletes each previewed path. Never throws: a file held open by another process
     /// is the normal case, not a failure of the tool, so it is counted and reported.
     /// </summary>
-    public static SweepOutcome Delete(IEnumerable<PreviewItem> items)
+    public static SweepOutcome Delete(
+        IEnumerable<PreviewItem> items,
+        IProgress<ToolProgress>? progress = null,
+        CancellationToken ct = default)
     {
         int deleted = 0, skipped = 0;
         long freed = 0;
         var problems = new List<string>();
 
-        foreach (var item in items)
+        var all = items as IReadOnlyList<PreviewItem> ?? items.ToList();
+        var total = all.Count;
+        var seen = 0;
+
+        // Reporting every single file would post tens of thousands of messages to
+        // the UI thread and cost more than the deleting. One update per 1% (and at
+        // least every 64 items) keeps the bar smooth without flooding it.
+        var step = Math.Max(1, Math.Min(64, total / 100));
+
+        foreach (var item in all)
         {
+            ct.ThrowIfCancellationRequested();
+
+            seen++;
+            if (seen % step == 0 || seen == total)
+                progress?.Report(new ToolProgress(seen, total, item.Label));
+
             var path = item.Detail;
             if (string.IsNullOrEmpty(path)) continue;
             try

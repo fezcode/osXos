@@ -8,8 +8,8 @@ namespace OsXos.Menus;
 /// action. Both the Hisashi bridge and the native macOS bridge read from here, so
 /// there is exactly one menu and it cannot drift between platforms.
 ///
-/// Every id <see cref="Build"/> produces must be answered by <see cref="Invoke"/>;
-/// a test walks the tree and asserts that, because a dead menu row is the kind of
+/// Every id <see cref="BuildTree"/> produces must be answered by <see cref="Invoke"/>;
+/// a test walks the real tree and asserts that, because a dead menu row is the kind of
 /// thing nobody notices until a user clicks it.
 /// </summary>
 public sealed class AppMenuModel
@@ -28,41 +28,70 @@ public sealed class AppMenuModel
     /// <summary>Raised whenever a command changes something the menu displays.</summary>
     public event Action? Changed;
 
-    public IReadOnlyList<AppMenuNode> Build()
-    {
-        var page = _vm.SelectedNav?.Name;
+    public IReadOnlyList<AppMenuNode> Build() => BuildTree(
+        _os,
+        _tools,
+        _vm.NavItems.Select(n => n.Name).ToList(),
+        _vm.SelectedNav?.Name,
+        _vm.HasQuery);
 
+    /// <summary>
+    /// The tree itself, built from plain data so it can be exercised without a window.
+    /// The instance <see cref="Build"/> is only this plus the view model's state.
+    /// </summary>
+    public static IReadOnlyList<AppMenuNode> BuildTree(
+        OSKind os,
+        ToolRegistry tools,
+        IReadOnlyList<string> pages,
+        string? currentPage,
+        bool hasQuery)
+    {
         // macOS puts Quit in the application menu with Cmd+Q and has no Alt+F4; the
         // hint is only ever a hint, but a wrong one is worse than none.
-        var quitKey = _os == OSKind.MacOS ? "Cmd+Q" : "Alt+F4";
-        var prefsKey = _os == OSKind.MacOS ? "Cmd+," : "Ctrl+,";
+        var quitKey = os == OSKind.MacOS ? "Cmd+Q" : "Alt+F4";
+        var prefsKey = os == OSKind.MacOS ? "Cmd+," : "Ctrl+,";
 
-        var menus = new List<AppMenuNode>
-        {
-            AppMenuNode.Menu("app", "osXos",
+        // On macOS the first submenu *becomes* the application menu, so it is named
+        // after the app and owns About, Settings and Quit - that is the platform
+        // convention. Everywhere else the host already shows the app's name beside
+        // the menus (Hisashi draws it, and a Linux panel shows it too), so repeating
+        // it gave a menubar reading "osXos osXos Tools View Help". Those platforms
+        // get a plain File menu instead, and About lives only under Help where it
+        // belongs.
+        var appMenu = os == OSKind.MacOS
+            ? AppMenuNode.Menu("app", "osXos",
                 AppMenuNode.Item("app.about", "About osXos"),
                 AppMenuNode.Separator(),
                 AppMenuNode.Item("app.settings", "Settings", prefsKey),
                 AppMenuNode.Item("app.data", "Open Settings Folder"),
                 AppMenuNode.Separator(),
-                AppMenuNode.Item("app.quit", "Quit osXos", quitKey)),
+                AppMenuNode.Item("app.quit", "Quit osXos", quitKey))
+            : AppMenuNode.Menu("app", "File",
+                AppMenuNode.Item("app.settings", "Settings", prefsKey),
+                AppMenuNode.Item("app.data", "Open Settings Folder"),
+                AppMenuNode.Separator(),
+                AppMenuNode.Item("app.quit", "Quit osXos", quitKey));
+
+        return new List<AppMenuNode>
+        {
+            appMenu,
 
             // One submenu per populated category, each listing its tools. This is the
             // menu bar earning its place: every tool in the app is two clicks away
             // without touching the sidebar.
-            new("tools", "Tools", Items: _tools.Categories
+            new("tools", "Tools", Items: tools.Categories
                 .Select(c => AppMenuNode.Menu($"cat.{c.Category}", c.Name,
-                    _tools.InCategory(c.Category)
+                    tools.InCategory(c.Category)
                         .Select(t => AppMenuNode.Item($"tool.{t.Id}", t.Name + "..."))
                         .ToArray()))
                 .ToList()),
 
-            new("view", "View", Items: _vm.NavItems
-                .Select(n => AppMenuNode.Item($"view.{n.Name}", n.Name, check: page == n.Name))
+            new("view", "View", Items: pages
+                .Select(name => AppMenuNode.Item($"view.{name}", name, check: currentPage == name))
                 .Concat(new[]
                 {
                     AppMenuNode.Separator(),
-                    AppMenuNode.Item("view.clearsearch", "Clear Search", enabled: _vm.HasQuery),
+                    AppMenuNode.Item("view.clearsearch", "Clear Search", enabled: hasQuery),
                 })
                 .ToList()),
 
@@ -70,8 +99,6 @@ public sealed class AppMenuModel
                 AppMenuNode.Item("help.project", "osXos on GitHub"),
                 AppMenuNode.Item("help.about", "About osXos")),
         };
-
-        return menus;
     }
 
     /// <summary>

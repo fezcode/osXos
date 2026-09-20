@@ -40,6 +40,16 @@ public sealed class CategoryViewModel : ViewModelBase
         OsName = CategoryCatalog.DisplayName(os);
         Cards = tools.Select(t => new ToolCardViewModel(t, open)).ToList();
         CountText = Cards.Count == 1 ? "1 tool" : $"{Cards.Count} tools";
+
+        // The badge states what is true of this category rather than repeating a
+        // slogan: it stops being honest the moment one tool here needs elevation.
+        var elevated = tools.Count(t => t.RequiresElevation);
+        NeedsElevation = elevated > 0;
+        ElevationText = elevated == 0
+            ? "No elevation needed"
+            : elevated == tools.Count
+                ? "Needs administrator"
+                : $"{elevated} of {tools.Count} need administrator";
     }
 
     public CategoryInfo Info { get; }
@@ -48,6 +58,8 @@ public sealed class CategoryViewModel : ViewModelBase
     public string OsName { get; }
     public IReadOnlyList<ToolCardViewModel> Cards { get; }
     public string CountText { get; }
+    public bool NeedsElevation { get; }
+    public string ElevationText { get; }
 }
 
 /// <summary>
