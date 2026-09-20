@@ -24,6 +24,7 @@ public enum ToolCategory
     Developer,
     Packages,
     Services,
+    AI,
 }
 
 /// <summary>One numbered step on a tool window's Explain stage.</summary>

@@ -91,9 +91,9 @@ public class CatalogTests
 
     [Theory]
     [MemberData(nameof(AllPlatforms))]
-    public void Every_platform_defines_six_categories(OSKind os)
+    public void Every_platform_defines_seven_categories(OSKind os)
     {
-        Assert.Equal(6, CategoryCatalog.For(os).Count);
+        Assert.Equal(7, CategoryCatalog.For(os).Count);
         Assert.All(CategoryCatalog.For(os), c =>
         {
             Assert.False(string.IsNullOrWhiteSpace(c.Name));

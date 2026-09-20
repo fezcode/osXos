@@ -1,3 +1,4 @@
+using OsXos.Tools.Ai;
 using OsXos.Tools.Windows;
 
 namespace OsXos.Tools;
@@ -49,6 +50,11 @@ public static class ToolCatalog
             // Developer
             new DeveloperStatusTool(registry),
             new PathHealthTool(),
+
+            // AI Assistants
+            new AiCleanupTool(OSKind.Windows, AiJob.Caches),
+            new AiCleanupTool(OSKind.Windows, AiJob.History),
+            new AiCleanupTool(OSKind.Windows, AiJob.Everything),
         };
     }
 
@@ -59,6 +65,10 @@ public static class ToolCatalog
             new Tools.MacOS.UserCachesTool(),
             new Tools.MacOS.FinderHiddenFilesTool(runner),
             new Tools.MacOS.FlushDnsTool(runner),
+
+            new AiCleanupTool(OSKind.MacOS, AiJob.Caches),
+            new AiCleanupTool(OSKind.MacOS, AiJob.History),
+            new AiCleanupTool(OSKind.MacOS, AiJob.Everything),
         };
 
     public static IReadOnlyList<ITool> Linux(IProcessRunner runner) =>
@@ -68,6 +78,10 @@ public static class ToolCatalog
             new Tools.Linux.UserCacheTool(),
             new Tools.Linux.IconCacheRebuildTool(runner),
             new Tools.Linux.FlushDnsTool(runner),
+
+            new AiCleanupTool(OSKind.Linux, AiJob.Caches),
+            new AiCleanupTool(OSKind.Linux, AiJob.History),
+            new AiCleanupTool(OSKind.Linux, AiJob.Everything),
         };
 
     /// <summary>

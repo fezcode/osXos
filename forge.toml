@@ -10,7 +10,7 @@
 
 [app]
 name    = "osXos"
-version = "0.2.0"
+version = "0.2.1"
 id      = "com.fezcode.osxos"
 icon    = "Assets/icon.ico"
 
@@ -108,4 +108,4 @@ data  = "${INSTALLDIR}"
 hive  = "HKCU"
 key   = "Software\\Fezcode\\osXos"
 value = "Version"
-data  = "0.2.0"
+data  = "0.2.1"

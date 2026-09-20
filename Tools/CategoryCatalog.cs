@@ -22,6 +22,7 @@ public static class CategoryCatalog
                 new(ToolCategory.Network, "Network", "IconNetwork"),
                 new(ToolCategory.Privacy, "Privacy", "IconPrivacy"),
                 new(ToolCategory.Developer, "Developer", "IconDeveloper"),
+                new(ToolCategory.AI, "AI Assistants", "IconAI"),
             },
             [OSKind.MacOS] = new CategoryInfo[]
             {
@@ -31,6 +32,7 @@ public static class CategoryCatalog
                 new(ToolCategory.Network, "Network", "IconNetwork"),
                 new(ToolCategory.Privacy, "Privacy", "IconPrivacy"),
                 new(ToolCategory.Developer, "Developer", "IconDeveloper"),
+                new(ToolCategory.AI, "AI Assistants", "IconAI"),
             },
             [OSKind.Linux] = new CategoryInfo[]
             {
@@ -40,6 +42,7 @@ public static class CategoryCatalog
                 new(ToolCategory.Network, "Network", "IconNetwork"),
                 new(ToolCategory.Packages, "Packages", "IconPackages"),
                 new(ToolCategory.Services, "Services", "IconServices"),
+                new(ToolCategory.AI, "AI Assistants", "IconAI"),
             },
         };
 

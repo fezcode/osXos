@@ -2,7 +2,7 @@
 
 ![osXos](Assets/banner.svg)
 
-**osXos** collects the small maintenance jobs you would otherwise do from a terminal — clearing the icon cache, emptying the temp folder, flushing DNS — and gives each one a window that explains exactly what it will do before it does it.
+**osXos** collects the small maintenance jobs you would otherwise do from a terminal — clearing the icon cache, emptying the temp folder, flushing DNS, sweeping up after the AI tools you code with — and gives each one a window that explains exactly what it will do before it does it.
 
 One codebase, three builds. osXos shows the tools for the operating system it is running on, with that OS's own category names.
 
@@ -46,7 +46,7 @@ A tool that needs rights declares it, the Review stage says so and names the pro
 
 ### Windows
 
-All six categories, twelve tools.
+All seven categories, fifteen tools.
 
 | Category | Tool | |
 |---|---|---|
@@ -62,6 +62,9 @@ All six categories, twelve tools.
 | Privacy | Clear Explorer & Run History | Typed paths, the Explorer search box, and the Run dialog |
 | Developer | Developer Settings Report | Long path support, Developer Mode, architecture — **read-only** |
 | Developer | PATH Health Check | Dead, duplicated and empty PATH entries — **read-only** |
+| AI Assistants | Clear AI Tool Caches | Scratch, logs, sandbox binaries and the installer packages Claude Desktop keeps after updating |
+| AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
+| AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
 
 ### macOS
 
@@ -71,6 +74,9 @@ All six categories, twelve tools.
 | Maintenance | Clear User Caches | `~/Library/Caches`, per-bundle sizes |
 | Finder & Dock | Show Hidden Files in Finder | `defaults write com.apple.finder AppleShowAllFiles`, then `killall Finder` |
 | Network | Flush DNS Cache | `dscacheutil -flushcache`. The `mDNSResponder` half needs sudo, so osXos shows you that command rather than running it |
+| AI Assistants | Clear AI Tool Caches | `~/.claude`, `~/.codex`, `~/.gemini`, plus the Claude Desktop and Antigravity caches under `~/Library` |
+| AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
+| AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
 
 ### Linux
 
@@ -80,10 +86,28 @@ All six categories, twelve tools.
 | Maintenance | Clear User Cache | `$XDG_CACHE_HOME`, per-application sizes |
 | Desktop & Shell | Rebuild Icon Cache | `gtk-update-icon-cache -f -t` per theme under `$XDG_DATA_HOME/icons` |
 | Network | Flush DNS Cache | `resolvectl flush-caches`, and an honest refusal if systemd-resolved is not what is resolving here |
+| AI Assistants | Clear AI Tool Caches | `~/.claude`, `~/.codex`, `~/.gemini`, plus the Claude Desktop and Antigravity caches under `$XDG_CACHE_HOME` |
+| AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
+| AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
+
+### What the AI tools will never delete
+
+The three AI Assistants tools work from a fixed list of known locations, never a search for anything AI-shaped under your profile. Four kinds of thing are not on that list at all, so they cannot appear on a Review stage and cannot be deleted by pressing the button on one — including by Remove AI Tool Leftovers:
+
+| Kept | Why |
+|---|---|
+| Logins — `.credentials.json`, `auth.json`, `oauth_creds.json`, `.sandbox-secrets` | A cleanup tool signing you out of something it does not own is a bug, not a feature |
+| Settings — `settings.json`, `config.toml`, `~/.claude.json`, `trustedFolders.json` | You set those |
+| Hand-written instruction files and skills — `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `skills/` | You wrote those |
+| Memory — every `memory/` folder inside `~/.claude/projects`, and `memories_1.sqlite` | Earned over months, and not a record of a conversation |
+
+`~/.claude/projects` is the awkward one, because the transcripts to remove and the memory to keep live in the same folder. Clear AI Assistant History lists each project with the size of its transcripts *alone*, and the memory folder is excluded from the deletion rather than handed over and skipped. A test builds a full fake profile, runs the most aggressive of the three tools over it, and asserts every file in the table above is still there afterwards.
+
+The `app-<version>` folders under `AnthropicClaude` are also deliberately absent: one of them is the copy currently running, and osXos will not guess which. The installer `packages` cache beside them — routinely the largest single entry on the list — is fair game, because Squirrel re-downloads it on demand.
 
 ### Categories
 
-Each OS defines six categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. Windows now fills all six; macOS and Linux fill three each.
+Each OS defines seven categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, AI Assistants, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. Windows now fills all seven; macOS and Linux fill four each.
 
 ![Settings, with all nine palettes](Assets/screenshot-settings.png)
 
