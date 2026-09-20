@@ -13,14 +13,44 @@ namespace OsXos.Tools;
 /// </summary>
 public static class ToolCatalog
 {
-    public static IReadOnlyList<ITool> Windows(IProcessRunner runner, IExplorerAdvancedSettings explorer) =>
-        new ITool[]
+    public static IReadOnlyList<ITool> Windows(
+        IProcessRunner runner,
+        IExplorerAdvancedSettings explorer,
+        IRegistryAccess? registry = null,
+        IRecycleBin? recycleBin = null,
+        IElevationService? elevation = null,
+        IShellController? shell = null)
+    {
+        registry ??= CreateRegistry();
+        recycleBin ??= CreateRecycleBin();
+        elevation ??= new ElevationService(runner);
+        shell ??= new ExplorerController();
+
+        return new ITool[]
         {
+            // Maintenance
             new IconCacheTool(),
             new TempFolderTool(),
+            new RecycleBinTool(recycleBin),
+            new UpdateCacheTool(elevation),
+
+            // Explorer & Shell
             new HiddenFilesTool(explorer),
+            new RestartExplorerTool(shell),
+            new OpenWithCacheTool(registry, shell),
+
+            // Network
             new Tools.Windows.FlushDnsTool(runner),
+
+            // Privacy
+            new RecentItemsTool(),
+            new ExplorerHistoryTool(registry),
+
+            // Developer
+            new DeveloperStatusTool(registry),
+            new PathHealthTool(),
         };
+    }
 
     public static IReadOnlyList<ITool> MacOS(IProcessRunner runner) =>
         new ITool[]
@@ -63,10 +93,32 @@ public static class ToolCatalog
         var runner = new ProcessRunner();
         return os switch
         {
-            OSKind.Windows => Windows(runner, new UnavailableExplorerSettings()).Count,
+            OSKind.Windows => Windows(
+                runner,
+                new UnavailableExplorerSettings(),
+                new UnavailableRegistry(),
+                new UnavailableRecycleBin(),
+                new ElevationService(runner),
+                new ExplorerController()).Count,
             OSKind.MacOS => MacOS(runner).Count,
             _ => Linux(runner).Count,
         };
+    }
+
+    static IRegistryAccess CreateRegistry()
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(
+                "The Windows tool set needs an IRegistryAccess supplied when built off Windows.");
+        return new WindowsRegistryAccess();
+    }
+
+    static IRecycleBin CreateRecycleBin()
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(
+                "The Windows tool set needs an IRecycleBin supplied when built off Windows.");
+        return new ShellRecycleBin();
     }
 
     static IExplorerAdvancedSettings CreateExplorerSettings()
@@ -98,5 +150,27 @@ public static class ToolCatalog
         }
 
         public void NotifyShell() => throw new PlatformNotSupportedException();
+    }
+
+    /// <summary>As above, for the registry-backed tools.</summary>
+    sealed class UnavailableRegistry : IRegistryAccess
+    {
+        public object? GetValue(RegHive hive, string keyPath, string name) =>
+            throw new PlatformNotSupportedException();
+        public IReadOnlyList<string> ValueNames(RegHive hive, string keyPath) =>
+            throw new PlatformNotSupportedException();
+        public IReadOnlyList<string> SubKeyNames(RegHive hive, string keyPath) =>
+            throw new PlatformNotSupportedException();
+        public bool DeleteValue(RegHive hive, string keyPath, string name) =>
+            throw new PlatformNotSupportedException();
+        public bool DeleteSubKeyTree(RegHive hive, string keyPath, string subKey) =>
+            throw new PlatformNotSupportedException();
+    }
+
+    /// <summary>As above, for the Recycle Bin.</summary>
+    sealed class UnavailableRecycleBin : IRecycleBin
+    {
+        public RecycleBinState Query() => throw new PlatformNotSupportedException();
+        public bool Empty() => throw new PlatformNotSupportedException();
     }
 }

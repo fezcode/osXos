@@ -1,4 +1,5 @@
 using OsXos.Tools;
+using OsXos.Tools.Windows;
 using Xunit;
 
 namespace OsXos.Tests;
@@ -10,17 +11,39 @@ namespace OsXos.Tests;
 /// </summary>
 public class ElevationTests
 {
-    [Fact]
-    public void No_tool_shipped_today_claims_to_need_elevation()
-    {
-        // The standing rule. A tool that changes this is making a claim, and this
-        // failing is the reminder to write down why in the README.
-        var runner = new FakeRunner();
-        var all = ToolCatalog.Windows(runner, new FakeExplorerSettings())
-            .Concat(ToolCatalog.MacOS(runner))
-            .Concat(ToolCatalog.Linux(runner));
+    /// <summary>
+    /// Exactly which tools may ask for administrator rights. Deliberately a list and
+    /// not a count: a tool quietly gaining elevation is the thing worth catching, and
+    /// adding one here is a small deliberate act that comes with updating the README.
+    /// </summary>
+    static readonly string[] MayElevate = { "windows.update-cache" };
 
-        Assert.All(all, t => Assert.False(t.RequiresElevation, $"{t.Id} now wants elevation"));
+    [Fact]
+    public void Only_the_tools_on_the_list_ask_for_elevation()
+    {
+        var runner = new FakeRunner();
+        var all = TestCatalog.Windows()
+            .Concat(ToolCatalog.MacOS(runner))
+            .Concat(ToolCatalog.Linux(runner))
+            .ToList();
+
+        var elevated = all.Where(t => t.RequiresElevation).Select(t => t.Id).OrderBy(x => x).ToList();
+        Assert.Equal(MayElevate.OrderBy(x => x), elevated);
+    }
+
+    [Fact]
+    public void A_tool_that_needs_elevation_says_so_on_its_preview_too()
+    {
+        // RequiresElevation drives the notice before the scan; the preview has to
+        // carry it as well, or the notice vanishes the moment Review arrives.
+        using var dir = new TempDir();
+        dir.File("update.cab", 4096);
+
+        var tool = new UpdateCacheTool(dir.Path, new ElevationService(new FakeRunner()));
+        var preview = tool.InspectAsync(default).Result;
+
+        Assert.True(tool.RequiresElevation);
+        Assert.True(preview.NeedsElevation);
     }
 
     [Fact]

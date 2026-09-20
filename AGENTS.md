@@ -93,13 +93,14 @@ steps in order and stop/report any failure before proceeding:
 - Every tool opens in the one shared `ToolWindow`, staged Explain → Review → Result.
   Do not give a tool its own view without a reason that survives being written down.
 - Categories derive from the tools that exist. Never add a "no tools yet" placeholder.
-- Elevation is plumbed but unused. Every tool shipped today works inside the user's
-  own account, and a test asserts that. A tool that genuinely cannot must set
+- Elevation is plumbed and used by exactly one tool (Clear Windows Update Cache).
+  `ElevationTests.MayElevate` is the allow-list and a test pins it, so a tool cannot
+  gain elevation quietly. A tool that genuinely cannot must set
   `RequiresElevation` (or set `NeedsElevation` on its preview when only this run
   needs it), which makes the Review stage say so before the OS prompt appears. Go
   through `IElevationService`, which elevates one named command — osXos never
-  relaunches itself as administrator. When the first such tool lands, update that
-  test, the README and the About panel together; they currently promise no prompts.
+  relaunches itself as administrator. Adding a tool to that list means updating the
+  allow-list, the README and the About panel together.
 - The menu is described once in `Menus/AppMenuModel.cs` and translated by both
   bridges. Add rows there, never to a bridge.
 - `Tools/` is source. Scripts live in `scripts/` because Windows treats `tools/` as

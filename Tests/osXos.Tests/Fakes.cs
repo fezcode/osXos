@@ -74,6 +74,89 @@ public sealed class FakeShellController : IShellController
     }
 }
 
+/// <summary>An in-memory registry, so the registry-backed tools never touch a real hive.</summary>
+public sealed class FakeRegistry : IRegistryAccess
+{
+    readonly Dictionary<string, Dictionary<string, object>> _values = new(StringComparer.OrdinalIgnoreCase);
+
+    public List<string> Deleted { get; } = new();
+
+    static string K(RegHive hive, string keyPath) => $"{hive}::{keyPath}";
+
+    public FakeRegistry Set(RegHive hive, string keyPath, string name, object value)
+    {
+        if (!_values.TryGetValue(K(hive, keyPath), out var bag))
+            _values[K(hive, keyPath)] = bag = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        bag[name] = value;
+        return this;
+    }
+
+    /// <summary>Creates a key with no values, which a subkey listing must still see.</summary>
+    public FakeRegistry AddKey(RegHive hive, string keyPath)
+    {
+        if (!_values.ContainsKey(K(hive, keyPath)))
+            _values[K(hive, keyPath)] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        return this;
+    }
+
+    public object? GetValue(RegHive hive, string keyPath, string name) =>
+        _values.TryGetValue(K(hive, keyPath), out var bag) && bag.TryGetValue(name, out var v) ? v : null;
+
+    public IReadOnlyList<string> ValueNames(RegHive hive, string keyPath) =>
+        _values.TryGetValue(K(hive, keyPath), out var bag) ? bag.Keys.ToList() : Array.Empty<string>();
+
+    public IReadOnlyList<string> SubKeyNames(RegHive hive, string keyPath)
+    {
+        var prefix = K(hive, keyPath) + "\\";
+        return _values.Keys
+            .Where(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .Select(k => k[prefix.Length..].Split('\\')[0])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public bool DeleteValue(RegHive hive, string keyPath, string name)
+    {
+        if (!_values.TryGetValue(K(hive, keyPath), out var bag) || !bag.Remove(name)) return false;
+        Deleted.Add($"{keyPath}\\{name}");
+        return true;
+    }
+
+    public bool DeleteSubKeyTree(RegHive hive, string keyPath, string subKey)
+    {
+        var prefix = K(hive, keyPath) + "\\" + subKey;
+        var hit = _values.Keys
+            .Where(k => k.Equals(prefix, StringComparison.OrdinalIgnoreCase)
+                     || k.StartsWith(prefix + "\\", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (hit.Count == 0) return false;
+        foreach (var k in hit) _values.Remove(k);
+        Deleted.Add($"{keyPath}\\{subKey}");
+        return true;
+    }
+}
+
+/// <summary>A Recycle Bin that reports what it is told and empties only in memory.</summary>
+public sealed class FakeRecycleBin : IRecycleBin
+{
+    public RecycleBinState State { get; set; } = new(0, 0);
+    public int EmptyCount { get; private set; }
+    public bool EmptySucceeds { get; set; } = true;
+
+    /// <summary>What stays behind after an empty, for the locked-file case.</summary>
+    public RecycleBinState Remaining { get; set; } = new(0, 0);
+
+    public RecycleBinState Query() => State;
+
+    public bool Empty()
+    {
+        EmptyCount++;
+        if (!EmptySucceeds) return false;
+        State = Remaining;
+        return true;
+    }
+}
+
 /// <summary>A temp directory that cleans itself up.</summary>
 public sealed class TempDir : IDisposable
 {

@@ -17,7 +17,7 @@ public class CatalogTests
         var runner = new FakeRunner();
         return os switch
         {
-            OSKind.Windows => ToolCatalog.Windows(runner, new FakeExplorerSettings()),
+            OSKind.Windows => TestCatalog.Windows(runner),
             OSKind.MacOS => ToolCatalog.MacOS(runner),
             _ => ToolCatalog.Linux(runner),
         };
@@ -113,7 +113,7 @@ public class RegistryTests
 {
     static ToolRegistry Registry(OSKind os) => new(os, os switch
     {
-        OSKind.Windows => ToolCatalog.Windows(new FakeRunner(), new FakeExplorerSettings()),
+        OSKind.Windows => TestCatalog.Windows(),
         OSKind.MacOS => ToolCatalog.MacOS(new FakeRunner()),
         _ => ToolCatalog.Linux(new FakeRunner()),
     });
@@ -129,9 +129,12 @@ public class RegistryTests
         Assert.NotEmpty(registry.Categories);
         Assert.All(registry.Categories, c => Assert.NotEmpty(registry.InCategory(c.Category)));
 
-        // The taxonomy reserves six names per OS; v1 does not fill them all, and the
-        // ones without a tool must not reach the sidebar.
-        Assert.True(registry.Categories.Count < CategoryCatalog.For(os).Count);
+        // The rule is that a category appears exactly when it has a tool - not that
+        // some are always missing. Windows now fills all six; macOS and Linux do not.
+        var populated = CategoryCatalog.For(os)
+            .Where(c => registry.Tools.Any(t => t.Category == c.Category))
+            .Select(c => c.Category);
+        Assert.Equal(populated, registry.Categories.Select(c => c.Category));
     }
 
     [Fact]

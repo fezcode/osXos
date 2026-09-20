@@ -13,7 +13,7 @@ public class MenuTests
 {
     static ToolRegistry Registry(OSKind os) => new(os, os switch
     {
-        OSKind.Windows => ToolCatalog.Windows(new FakeRunner(), new FakeExplorerSettings()),
+        OSKind.Windows => TestCatalog.Windows(),
         OSKind.MacOS => ToolCatalog.MacOS(new FakeRunner()),
         _ => ToolCatalog.Linux(new FakeRunner()),
     });

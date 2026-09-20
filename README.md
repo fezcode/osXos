@@ -40,18 +40,28 @@ osXos describes itself as a menu once — an **osXos** menu, **Tools** (every to
 
 ## Tools
 
-Every tool shipped today runs entirely within your own user account: **no UAC, no sudo, no polkit.** A test enforces it, so this stays true by accident of nobody noticing.
+Almost everything here runs inside your own user account — no UAC, no sudo, no polkit. **Exactly one tool needs administrator rights**, Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first.
 
-Some future tools will need administrator rights, and the plumbing is in place for them. A tool that needs them declares it, the Review stage says so — naming the prompt the OS is about to show — and osXos elevates that one command rather than relaunching itself as administrator. The category header tells you which way round it is.
+A tool that needs rights declares it, the Review stage says so and names the prompt the OS is about to show, and osXos elevates **that one command** rather than relaunching itself as administrator — so the window, your settings and every other tool stay at normal rights. The category header tells you which way round it is (`1 of 4 need administrator`). A test pins the exact list of tools allowed to ask, so one cannot gain elevation quietly.
 
 ### Windows
+
+All six categories, twelve tools.
 
 | Category | Tool | |
 |---|---|---|
 | Maintenance | **Clear Icon Cache** | Ends Explorer, deletes `iconcache_*.db`, `thumbcache_*.db` and the legacy `IconCache.db`, restarts Explorer |
 | Maintenance | Empty Temp Folder | `%TEMP%`, skipping and reporting anything still in use |
+| Maintenance | Empty Recycle Bin | Every drive, with the real count and size first. Re-queries afterwards rather than assuming everything went |
+| Maintenance | Clear Windows Update Cache | `SoftwareDistribution\Download` — **the one tool that needs administrator rights** |
 | Explorer & Shell | Show Hidden Files & Extensions | Flips `Hidden` and `HideFileExt`, then broadcasts `SHChangeNotify`. Run it twice to undo |
+| Explorer & Shell | Restart Explorer | The shell on its own, for a stuck taskbar or tray. Deletes nothing |
+| Explorer & Shell | Rebuild Open With Lists | Clears the `FileExts` cache so Explorer stops offering uninstalled programs. Leaves `HKEY_CLASSES_ROOT` alone |
 | Network | Flush DNS Cache | `ipconfig /flushdns` |
+| Privacy | Clear Recent Files & Jump Lists | The Recent folder plus both jump-list stores |
+| Privacy | Clear Explorer & Run History | Typed paths, the Explorer search box, and the Run dialog |
+| Developer | Developer Settings Report | Long path support, Developer Mode, architecture — **read-only** |
+| Developer | PATH Health Check | Dead, duplicated and empty PATH entries — **read-only** |
 
 ### macOS
 
@@ -73,7 +83,7 @@ Some future tools will need administrator rights, and the plumbing is in place f
 
 ### Categories
 
-Each OS defines six categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands.
+Each OS defines six categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. Windows now fills all six; macOS and Linux fill three each.
 
 ![Settings, with all nine palettes](Assets/screenshot-settings.png)
 
