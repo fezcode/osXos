@@ -33,7 +33,8 @@ public sealed class AppMenuModel
         _tools,
         _vm.NavItems.Select(n => n.Name).ToList(),
         _vm.SelectedNav?.Name,
-        _vm.HasQuery);
+        _vm.HasQuery,
+        _vm.Settings.IsDarkMode);
 
     /// <summary>
     /// The tree itself, built from plain data so it can be exercised without a window.
@@ -44,7 +45,8 @@ public sealed class AppMenuModel
         ToolRegistry tools,
         IReadOnlyList<string> pages,
         string? currentPage,
-        bool hasQuery)
+        bool hasQuery,
+        bool darkMode = false)
     {
         // macOS puts Quit in the application menu with Cmd+Q and has no Alt+F4; the
         // hint is only ever a hint, but a wrong one is worse than none.
@@ -92,6 +94,8 @@ public sealed class AppMenuModel
                 {
                     AppMenuNode.Separator(),
                     AppMenuNode.Item("view.clearsearch", "Clear Search", enabled: hasQuery),
+                    AppMenuNode.Separator(),
+                    AppMenuNode.Item("view.darkmode", "Dark Mode", check: darkMode),
                 })
                 .ToList()),
 
@@ -130,6 +134,7 @@ public sealed class AppMenuModel
             case "app.quit": Shutdown(); break;
 
             case "view.clearsearch": _vm.Query = ""; break;
+            case "view.darkmode": _vm.Settings.IsDarkMode = !_vm.Settings.IsDarkMode; break;
 
             case "help.project": _vm.OpenProjectCommand.Execute().Subscribe(); break;
             case "help.about": _vm.OpenAboutCommand.Execute().Subscribe(); break;
@@ -142,7 +147,7 @@ public sealed class AppMenuModel
     public static readonly IReadOnlyList<string> StaticIds = new[]
     {
         "app.about", "app.settings", "app.data", "app.quit",
-        "view.clearsearch", "help.project", "help.about",
+        "view.clearsearch", "view.darkmode", "help.project", "help.about",
     };
 
     static void Shutdown()

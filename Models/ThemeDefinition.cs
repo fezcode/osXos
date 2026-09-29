@@ -367,8 +367,25 @@ public static class ThemeCatalog
         )
     };
 
+    /// <summary>The palettes offered while light mode is on, in display order.</summary>
+    public static readonly IReadOnlyList<ThemeDefinition> LightThemes = Themes.Where(t => !t.IsDark).ToList();
+
+    /// <summary>The palettes offered while dark mode is on, in display order.</summary>
+    public static readonly IReadOnlyList<ThemeDefinition> DarkThemes = Themes.Where(t => t.IsDark).ToList();
+
     public static ThemeDefinition FindTheme(string? key) =>
         Themes.FirstOrDefault(t => string.Equals(t.Key, key, StringComparison.OrdinalIgnoreCase)) ?? Themes[0];
+
+    /// <summary>
+    /// The palette named by <paramref name="key"/> if it belongs to that mode, and
+    /// otherwise the mode's first. A hand-edited settings file naming a dark palette
+    /// as the light one must not leave light mode rendering dark.
+    /// </summary>
+    public static ThemeDefinition FindTheme(string? key, bool dark)
+    {
+        var pool = dark ? DarkThemes : LightThemes;
+        return pool.FirstOrDefault(t => string.Equals(t.Key, key, StringComparison.OrdinalIgnoreCase)) ?? pool[0];
+    }
 
     public static FontDefinition FindFont(string? key) =>
         Fonts.FirstOrDefault(f => string.Equals(f.Key, key, StringComparison.OrdinalIgnoreCase)) ?? Fonts[0];

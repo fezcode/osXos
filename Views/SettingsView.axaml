@@ -22,6 +22,33 @@
     <Style Selector="ListBox.themeList ListBoxItem:pointerover Border.themeCard">
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
     </Style>
+
+    <!-- Light / Dark segmented switch. The lit segment takes the accent; the other
+         stays flat so the pair reads as one control with one answer. -->
+    <Style Selector="Button.segment">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="14,6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.segment:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceActive}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+    </Style>
+    <Style Selector="Button.segment.on /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Accent}"/>
+      <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+    </Style>
+    <!-- The app-wide PathIcon style pins its own ink, so the icon does not follow
+         the presenter the way the label does and has to be told separately. -->
+    <Style Selector="Button.segment PathIcon">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+    </Style>
+    <Style Selector="Button.segment.on PathIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+    </Style>
   </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*">
@@ -97,8 +124,39 @@
               <TextBlock Text="Nature Landscape Theme &amp; Color Scheme" Classes="h3"/>
             </StackPanel>
 
-            <TextBlock Text="Select a curated color palette inspired by editorial nature landscape photography and deep obsidian midnight styling. Changes apply immediately so you can see them; they are written to disk on Save."
-                       FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+              <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="Mode" FontWeight="SemiBold" FontSize="13"/>
+                <TextBlock Text="Also on the top bar and in the View menu. Remembered as soon as you switch."
+                           FontSize="11" Classes="muted" TextWrapping="Wrap"/>
+              </StackPanel>
+
+              <Border Grid.Column="1" Background="{DynamicResource SurfaceHover}" CornerRadius="8" Padding="3"
+                      BorderBrush="{DynamicResource Line}" BorderThickness="1" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                  <Button Classes="segment" Classes.on="{Binding IsLightMode}" Command="{Binding UseLightModeCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <PathIcon Data="{StaticResource IconSun}" Width="12" Height="12" VerticalAlignment="Center"/>
+                      <TextBlock Text="Light" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="segment" Classes.on="{Binding IsDarkMode}" Command="{Binding UseDarkModeCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <PathIcon Data="{StaticResource IconMoon}" Width="11" Height="11" VerticalAlignment="Center"/>
+                      <TextBlock Text="Dark" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </Border>
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource LineSubtle}" HorizontalAlignment="Stretch"/>
+
+            <StackPanel Spacing="2">
+              <TextBlock Text="{Binding PaletteHeading}" FontWeight="SemiBold" FontSize="13"/>
+              <TextBlock Text="Each mode keeps its own palette, so the switch always lands on the one you picked for it. Palettes apply immediately so you can see them; they are written to disk on Save."
+                         FontSize="11" Classes="muted" TextWrapping="Wrap"/>
+            </StackPanel>
 
             <ListBox Classes="themeList" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"
                      Background="Transparent" BorderThickness="0">

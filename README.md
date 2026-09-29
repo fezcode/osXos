@@ -40,59 +40,93 @@ osXos describes itself as a menu once — an **osXos** menu, **Tools** (every to
 
 ## Tools
 
-Almost everything here runs inside your own user account — no UAC, no sudo, no polkit. **Exactly one tool needs administrator rights**, Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first.
+Almost everything here runs inside your own user account — no UAC, no sudo, no polkit. **Exactly two tools need administrator rights**: Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first, and Clean Package Cache on Linux, because the package manager's download cache is owned by root.
 
 A tool that needs rights declares it, the Review stage says so and names the prompt the OS is about to show, and osXos elevates **that one command** rather than relaunching itself as administrator — so the window, your settings and every other tool stay at normal rights. The category header tells you which way round it is (`1 of 4 need administrator`). A test pins the exact list of tools allowed to ask, so one cannot gain elevation quietly.
 
 ### Windows
 
-All seven categories, fifteen tools.
+All seven categories, twenty-five tools.
 
 | Category | Tool | |
 |---|---|---|
 | Maintenance | **Clear Icon Cache** | Ends Explorer, deletes `iconcache_*.db`, `thumbcache_*.db` and the legacy `IconCache.db`, restarts Explorer |
 | Maintenance | Empty Temp Folder | `%TEMP%`, skipping and reporting anything still in use |
 | Maintenance | Empty Recycle Bin | Every drive, with the real count and size first. Re-queries afterwards rather than assuming everything went |
-| Maintenance | Clear Windows Update Cache | `SoftwareDistribution\Download` — **the one tool that needs administrator rights** |
+| Maintenance | Clear Windows Update Cache | `SoftwareDistribution\Download` — **needs administrator rights** |
+| Maintenance | Clear Shader Caches | DirectX `D3DSCache`, NVIDIA `DXCache`/`GLCache`, AMD `DxCache`/`DxcCache`/`VkCache`, Intel's under `LocalLow` |
+| Maintenance | Clear Crash Dumps & Error Reports | `%LOCALAPPDATA%\CrashDumps` and your own Windows Error Reporting queue and archive — the folders stay, their contents go |
 | Explorer & Shell | Show Hidden Files & Extensions | Flips `Hidden` and `HideFileExt`, then broadcasts `SHChangeNotify`. Run it twice to undo |
 | Explorer & Shell | Restart Explorer | The shell on its own, for a stuck taskbar or tray. Deletes nothing |
 | Explorer & Shell | Rebuild Open With Lists | Clears the `FileExts` cache so Explorer stops offering uninstalled programs. Leaves `HKEY_CLASSES_ROOT` alone |
+| Explorer & Shell | Classic Right-Click Menu | Windows 11 only: the per-user `InprocServer32` override for the full menu, then an Explorer restart. Run it twice to undo |
+| Explorer & Shell | Show Seconds on the Taskbar Clock | `ShowSecondsInSystemClock`, then a settings broadcast |
+| Explorer & Shell | Show Full Path in Explorer Titles | `CabinetState\FullPath` — on Windows 11 it shows in the taskbar preview and Alt+Tab |
+| System | Switch Dark / Light Mode | Flips `AppsUseLightTheme` and `SystemUsesLightTheme` together, then broadcasts `ImmersiveColorSet` so the taskbar and open apps redraw. Run it twice to undo |
+| System | Startup Apps Report | Both `Run` keys and both Startup folders, each marked enabled or disabled the way Task Manager records it — **read-only** |
 | Network | Flush DNS Cache | `ipconfig /flushdns` |
 | Privacy | Clear Recent Files & Jump Lists | The Recent folder plus both jump-list stores |
 | Privacy | Clear Explorer & Run History | Typed paths, the Explorer search box, and the Run dialog |
+| Privacy | Clear Browser Caches | Every profile's disk, script, GPU and service-worker caches in Chrome, Edge, Brave, Vivaldi, Chromium and Firefox. Never cookies, passwords, history or bookmarks |
 | Developer | Developer Settings Report | Long path support, Developer Mode, architecture — **read-only** |
 | Developer | PATH Health Check | Dead, duplicated and empty PATH entries — **read-only** |
-| AI Assistants | Clear AI Tool Caches | Scratch, logs, sandbox binaries and the installer packages Claude Desktop keeps after updating |
+| Developer | Clear Developer Caches | npm, Yarn, Bun, Deno, node-gyp, pip, uv, NuGet, Go build, Cargo and Gradle caches. Never a project folder, Maven's local repository, Go's module cache or pnpm's store |
+| AI Assistants | Clear AI Temp Files | Per-session scratchpads, temp folders, and the pasted images and git indexes Codex drops in the temp folder |
+| AI Assistants | Clear AI Tool Caches | Everything above, plus logs, sandbox binaries and the installer packages Claude Desktop keeps after updating |
 | AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
 | AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
 
 ### macOS
 
+All seven categories, eighteen tools.
+
 | Category | Tool | |
 |---|---|---|
 | Maintenance | Clear Icon Services Cache | Removes `~/Library/Caches/com.apple.iconservices.store`, restarts Dock and Finder |
 | Maintenance | Clear User Caches | `~/Library/Caches`, per-bundle sizes |
+| Maintenance | Empty Trash | Counted and emptied through Finder, so osXos never needs Full Disk Access. macOS asks once to allow Automation |
+| Maintenance | Reset Quick Look Cache | `qlmanage -r cache`, for stale or blank thumbnails |
 | Finder & Dock | Show Hidden Files in Finder | `defaults write com.apple.finder AppleShowAllFiles`, then `killall Finder` |
+| Finder & Dock | Show Finder Path & Status Bars | `ShowPathbar` and `ShowStatusBar` together, then `killall Finder` |
+| Finder & Dock | Restart Dock | `killall Dock`, for a frozen Dock, Mission Control or Launchpad |
+| Finder & Dock | Save Screenshots to Pictures | `com.apple.screencapture location` between `~/Pictures/Screenshots` and the Desktop default |
+| System | Switch Dark / Light Mode | Asks System Events to flip `dark mode`, the same switch as System Settings → Appearance. macOS asks once to allow Automation |
 | Network | Flush DNS Cache | `dscacheutil -flushcache`. The `mDNSResponder` half needs sudo, so osXos shows you that command rather than running it |
+| Privacy | Clear Browser Caches | Chrome, Edge, Brave, Vivaldi, Chromium and Firefox caches under `~/Library`. Never cookies or logins. Safari is left out: its cache is behind Full Disk Access |
+| Developer | Clear Developer Caches | The same package-manager caches as on Windows, at their macOS locations |
+| Developer | Clear Xcode Build Data | `DerivedData` (emptied), device support files and Xcode's caches. Never Archives |
+| Developer | Delete Unavailable Simulators | `xcrun simctl delete unavailable`, after listing each one |
+| AI Assistants | Clear AI Temp Files | Per-session scratchpads, temp folders, and the pasted images and git indexes Codex drops in the temp folder |
 | AI Assistants | Clear AI Tool Caches | `~/.claude`, `~/.codex`, `~/.gemini`, plus the Claude Desktop and Antigravity caches under `~/Library` |
 | AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
 | AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
 
 ### Linux
 
+All seven categories, sixteen tools.
+
 | Category | Tool | |
 |---|---|---|
 | Maintenance | Clear Thumbnail Cache | `$XDG_CACHE_HOME/thumbnails` — `normal/`, `large/` and `fail/` |
 | Maintenance | Clear User Cache | `$XDG_CACHE_HOME`, per-application sizes |
+| Maintenance | Empty Trash | `$XDG_DATA_HOME/Trash` — `files/`, `info/` and `expunged/` emptied, the folders kept |
+| Maintenance | Clear Browser Caches | Chrome, Edge, Brave, Vivaldi, Chromium and Firefox caches under `$XDG_CACHE_HOME` and `~/.config`. Never cookies or logins |
 | Desktop & Shell | Rebuild Icon Cache | `gtk-update-icon-cache -f -t` per theme under `$XDG_DATA_HOME/icons` |
+| System | Switch Dark / Light Mode | KDE Plasma: `plasma-apply-colorscheme` between Breeze Light and Dark. GNOME and friends: `gsettings` `color-scheme`, plus the GTK theme's `-dark` variant when one is installed |
 | Network | Flush DNS Cache | `resolvectl flush-caches`, and an honest refusal if systemd-resolved is not what is resolving here |
+| Packages | Clear Developer Caches | npm, Yarn, Bun, Deno, node-gyp, pip, uv, NuGet, Go build, Cargo and Gradle caches |
+| Packages | Remove Unused Flatpak Runtimes | `flatpak uninstall --user --unused`. The system installation's command is shown, not run |
+| Packages | Clean Package Cache | `apt-get clean`, `dnf clean packages`, `pacman -Sc` or `zypper clean` — **needs administrator rights**, asked for through polkit |
+| Services | Restart Audio | `systemctl --user restart` for whichever of PipeWire, WirePlumber and PulseAudio is running |
+| Services | Failed Services Report | `systemctl --failed` for your session and the system — **read-only** |
+| AI Assistants | Clear AI Temp Files | Per-session scratchpads, temp folders, and the pasted images and git indexes Codex drops in the temp folder |
 | AI Assistants | Clear AI Tool Caches | `~/.claude`, `~/.codex`, `~/.gemini`, plus the Claude Desktop and Antigravity caches under `$XDG_CACHE_HOME` |
 | AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
 | AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
 
 ### What the AI tools will never delete
 
-The three AI Assistants tools work from a fixed list of known locations, never a search for anything AI-shaped under your profile. Four kinds of thing are not on that list at all, so they cannot appear on a Review stage and cannot be deleted by pressing the button on one — including by Remove AI Tool Leftovers:
+The four AI Assistants tools work from a fixed list of known locations, never a search for anything AI-shaped under your profile. Four kinds of thing are not on that list at all, so they cannot appear on a Review stage and cannot be deleted by pressing the button on one — including by Remove AI Tool Leftovers:
 
 | Kept | Why |
 |---|---|
@@ -101,19 +135,25 @@ The three AI Assistants tools work from a fixed list of known locations, never a
 | Hand-written instruction files and skills — `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `skills/` | You wrote those |
 | Memory — every `memory/` folder inside `~/.claude/projects`, and `memories_1.sqlite` | Earned over months, and not a record of a conversation |
 
-`~/.claude/projects` is the awkward one, because the transcripts to remove and the memory to keep live in the same folder. Clear AI Assistant History lists each project with the size of its transcripts *alone*, and the memory folder is excluded from the deletion rather than handed over and skipped. A test builds a full fake profile, runs the most aggressive of the three tools over it, and asserts every file in the table above is still there afterwards.
+`~/.claude/projects` is the awkward one, because the transcripts to remove and the memory to keep live in the same folder. Clear AI Assistant History lists each project with the size of its transcripts *alone*, and the memory folder is excluded from the deletion rather than handed over and skipped. A test builds a full fake profile, runs the most aggressive of the four tools over it, and asserts every file in the table above is still there afterwards.
 
 The `app-<version>` folders under `AnthropicClaude` are also deliberately absent: one of them is the copy currently running, and osXos will not guess which. The installer `packages` cache beside them — routinely the largest single entry on the list — is fair game, because Squirrel re-downloads it on demand.
 
+The one place the list holds a wildcard is the system temp folder, where Codex drops every pasted image and snapshot git index loose under its own name. Those are matched by that literal prefix — `codex-clipboard-*.png`, `codex-index-*` — directly inside the temp folder and nowhere below it; a test pins that no pattern can start with the wildcard.
+
 ### Categories
 
-Each OS defines seven categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, AI Assistants, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. Windows now fills all seven; macOS and Linux fill four each.
+Each OS defines seven categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, AI Assistants, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. All three platforms now fill all seven.
 
 ![Settings, with all nine palettes](Assets/screenshot-settings.png)
 
 ## Themes
 
-Nine editorial palettes and seven typefaces, switchable live, shared with Cogas. Settings, theme and behaviour live in a plain JSON file you can read and edit:
+Nine editorial palettes — seven light, two dark — and seven typefaces, switchable live, shared with Cogas.
+
+**Light and dark mode** is one click on every platform: the sun/moon button in the top bar, the Light/Dark switch in Settings, or **View → Dark Mode** in the menu bar. Each mode keeps its own palette, so switching always lands on the one you picked for it. The mode is saved as soon as you switch; palette choices still wait for Save.
+
+Settings, theme and behaviour live in a plain JSON file you can read and edit:
 
 | OS | Location |
 |---|---|

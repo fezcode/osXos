@@ -14,7 +14,9 @@ public static class TestCatalog
         IProcessRunner? runner = null,
         IRegistryAccess? registry = null,
         IRecycleBin? recycleBin = null,
-        IShellController? shell = null)
+        IShellController? shell = null,
+        IWindowsAppearance? appearance = null,
+        IUserRegistry? userRegistry = null)
     {
         runner ??= new FakeRunner();
         return ToolCatalog.Windows(
@@ -23,6 +25,8 @@ public static class TestCatalog
             registry ?? new FakeRegistry(),
             recycleBin ?? new FakeRecycleBin(),
             new ElevationService(runner),
-            shell ?? new FakeShellController());
+            shell ?? new FakeShellController(),
+            appearance ?? new FakeWindowsAppearance(),
+            userRegistry ?? new FakeUserRegistry());
     }
 }

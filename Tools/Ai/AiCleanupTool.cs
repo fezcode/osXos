@@ -1,13 +1,16 @@
 namespace OsXos.Tools.Ai;
 
 /// <summary>
-/// Which of the three jobs in the AI Assistants category a tool instance is. The only
+/// Which of the four jobs in the AI Assistants category a tool instance is. The only
 /// thing that differs between them is the <see cref="AiSpill"/> filter and the prose
-/// explaining it, so they are one class three times rather than three classes.
+/// explaining it, so they are one class four times rather than four classes.
 /// </summary>
 public enum AiJob
 {
-    /// <summary>Scratch only. Nothing here is unrecoverable.</summary>
+    /// <summary>Temp only. Nothing here is even a cache.</summary>
+    Temp,
+
+    /// <summary>Temp and scratch. Nothing here is unrecoverable.</summary>
     Caches,
 
     /// <summary>Transcripts only. Everything here is unrecoverable.</summary>
@@ -28,12 +31,12 @@ public enum AiJob
 /// </summary>
 public sealed class AiCleanupTool : ITool
 {
-    readonly AiPaths _paths;
+    readonly ProfileRoots _paths;
 
     public AiCleanupTool(OSKind platform, AiJob job)
-        : this(platform, job, AiPaths.Current(platform)) { }
+        : this(platform, job, ProfileRoots.Current(platform)) { }
 
-    public AiCleanupTool(OSKind platform, AiJob job, AiPaths paths)
+    public AiCleanupTool(OSKind platform, AiJob job, ProfileRoots paths)
     {
         Platform = platform;
         Job = job;
@@ -47,9 +50,10 @@ public sealed class AiCleanupTool : ITool
     /// <summary>What this job is allowed to touch. The whole difference between the three.</summary>
     public IReadOnlyCollection<AiSpill> Spills => Job switch
     {
-        AiJob.Caches => new[] { AiSpill.Scratch },
+        AiJob.Temp => new[] { AiSpill.Temp },
+        AiJob.Caches => new[] { AiSpill.Temp, AiSpill.Scratch },
         AiJob.History => new[] { AiSpill.History },
-        _ => new[] { AiSpill.Scratch, AiSpill.History, AiSpill.Residue },
+        _ => new[] { AiSpill.Temp, AiSpill.Scratch, AiSpill.History, AiSpill.Residue },
     };
 
     public string Id => Platform switch
@@ -61,6 +65,7 @@ public sealed class AiCleanupTool : ITool
 
     string Slug => Job switch
     {
+        AiJob.Temp => "ai-temp",
         AiJob.Caches => "ai-caches",
         AiJob.History => "ai-history",
         _ => "ai-leftovers",
@@ -68,6 +73,7 @@ public sealed class AiCleanupTool : ITool
 
     public string Name => Job switch
     {
+        AiJob.Temp => "Clear AI Temp Files",
         AiJob.Caches => "Clear AI Tool Caches",
         AiJob.History => "Clear AI Assistant History",
         _ => "Remove AI Tool Leftovers",
@@ -75,6 +81,7 @@ public sealed class AiCleanupTool : ITool
 
     public string Summary => Job switch
     {
+        AiJob.Temp => "Delete the per-session scratchpads, temp folders and pasted images Claude and Codex never come back for.",
         AiJob.Caches => "Delete the scratch, logs and installer payloads Claude, Codex and Antigravity leave behind.",
         AiJob.History => "Delete the stored transcripts of your conversations with Claude, Codex and Antigravity.",
         _ => "Remove everything these tools have left under your profile, short of your logins and settings.",
@@ -82,6 +89,7 @@ public sealed class AiCleanupTool : ITool
 
     public string IconKey => Job switch
     {
+        AiJob.Temp => "IconFolder",
         AiJob.Caches => "IconTrash",
         AiJob.History => "IconPrivacy",
         _ => "IconAI",
@@ -91,6 +99,10 @@ public sealed class AiCleanupTool : ITool
 
     public string? Warning => Job switch
     {
+        AiJob.Temp =>
+            "Close Claude Code and Codex first — a session that is still running is using its scratchpad, and anything it holds open is skipped rather than forced. " +
+            "Nothing here is read again once its session ends: not a cache, not a transcript, and not missed.",
+
         AiJob.Caches =>
             "Close Claude, Codex and Antigravity first — a running one holds its own scratch open and will rewrite it as soon as this finishes. " +
             "Nothing here is irreplaceable: the next launch of each tool is slower while it rebuilds, and that is the whole cost.",
@@ -106,10 +118,22 @@ public sealed class AiCleanupTool : ITool
 
     public IReadOnlyList<ToolStep> Steps => Job switch
     {
+        AiJob.Temp => new ToolStep[]
+        {
+            new("Look where these tools put throwaway files",
+                @"The per-session scratchpads every Claude Code run creates under the system temp folder, Claude Code's shell snapshots and session environments, Codex's two temp folders under ~/.codex, and the files Codex drops loose in the system temp folder — every image pasted into a prompt, and the git index each snapshot of your working tree is built with."),
+            new("Match by the tool's own name, never by shape",
+                "The loose files are found by the prefix Codex gives them — codex-clipboard-, codex-index- — and nothing else in the temp folder is looked at. Emptying the whole temp folder is a different job, and not this one."),
+            new("Measure each one before anything is touched",
+                "The Review stage lists every location with its real size on this machine. The scan only reads, and a tool that is not installed here simply contributes nothing."),
+            new("Delete the rest",
+                "Files held open by a session that is still running are skipped rather than forced, counted, and named afterwards. Caches, transcripts, logins, settings, skills and memory are not in this tool's reach at all — the next launch is not even slower."),
+        },
+
         AiJob.Caches => new ToolStep[]
         {
             new("Look in the places these tools cache things",
-                @"Claude Code's cache, shell snapshots, session environments and per-session scratchpads; Codex's sandbox binaries, scratch folders and log database; the Electron cache folders under Claude Desktop and Antigravity; and the installer packages Claude Desktop keeps after updating. All of it inside your own profile, so no administrator rights are needed."),
+                @"Everything Clear AI Temp Files takes, plus Claude Code's cache, downloads and file-edit undo history; Codex's sandbox binaries and log database; the Electron cache folders under Claude Desktop and Antigravity; and the installer packages Claude Desktop keeps after updating. All of it inside your own profile, so no administrator rights are needed."),
             new("Measure each one before anything is touched",
                 "The Review stage lists every location with its real size on this machine. The scan only reads. If a tool is not installed here, it simply contributes nothing rather than being reported as a problem."),
             new("Nothing that matters is on the list",
@@ -132,8 +156,8 @@ public sealed class AiCleanupTool : ITool
 
         _ => new ToolStep[]
         {
-            new("Everything the other two tools find, in one list",
-                "The caches and scratch that Clear AI Tool Caches would remove, and the transcripts that Clear AI Assistant History would remove, together."),
+            new("Everything the other tools find, in one list",
+                "The temp files, caches and scratch that Clear AI Tool Caches would remove, and the transcripts that Clear AI Assistant History would remove, together."),
             new("Plus what neither of them claims",
                 "Installed plugins and IDE extensions, generated images and visualizations, state and queue databases, editor backups, workspace storage, the browser profile Antigravity keeps. None of it reproducible, none of it a transcript, all of it left behind."),
             new("What survives, deliberately",
@@ -174,6 +198,7 @@ public sealed class AiCleanupTool : ITool
 
     string NothingFound => Job switch
     {
+        AiJob.Temp => "Nothing to clear — none of the AI tools osXos knows about has left temp files on this machine.",
         AiJob.Caches => "Nothing to clear — none of the AI tools osXos knows about has left a cache on this machine.",
         AiJob.History => "Nothing to clear — no stored conversations were found for any of the AI tools osXos knows about.",
         _ => "Nothing to remove — none of the AI tools osXos knows about has left anything on this machine.",
@@ -186,7 +211,7 @@ public sealed class AiCleanupTool : ITool
 
         var lines = new List<string>
         {
-            $"Removed {sweep.Deleted:N0} of {preview.Items.Count:N0} locations, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.",
+            $"Removed {sweep.Deleted:N0} item{(sweep.Deleted == 1 ? "" : "s")} across {preview.Items.Count:N0} location{(preview.Items.Count == 1 ? "" : "s")}, reclaiming {FileSweep.FormatBytes(sweep.Freed)}.",
         };
 
         if (sweep.Skipped > 0)
@@ -200,13 +225,14 @@ public sealed class AiCleanupTool : ITool
 
         lines.Add(Job switch
         {
+            AiJob.Temp => "Caches, transcripts, credentials and settings were not touched.",
             AiJob.Caches => "Each tool rebuilds its cache on the next launch.",
             AiJob.History => "Memory, credentials and settings were not touched.",
             _ => "You are still signed in, and your settings, skills and memory were not touched.",
         });
 
         return Task.FromResult(ToolResult.Success(
-            $"{FileSweep.FormatBytes(sweep.Freed)} reclaimed from {sweep.Deleted:N0} locations",
+            $"{FileSweep.FormatBytes(sweep.Freed)} reclaimed from {preview.Items.Count:N0} location{(preview.Items.Count == 1 ? "" : "s")}",
             lines.ToArray()));
     }
 }

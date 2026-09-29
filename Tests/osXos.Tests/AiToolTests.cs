@@ -6,13 +6,13 @@ namespace OsXos.Tests;
 
 /// <summary>
 /// The AI Assistants category. Every test here runs against a fake profile built under
-/// a temp directory — <see cref="AiPaths"/> exists so that the map can be pointed
+/// a temp directory — <see cref="ProfileRoots"/> exists so that the map can be pointed
 /// somewhere other than the machine running the tests, and none of these ever touch a
 /// real <c>~/.claude</c>.
 /// </summary>
 public class AiFootprintTests
 {
-    static AiPaths Fake(TempDir dir) => new(
+    static ProfileRoots Fake(TempDir dir) => new(
         dir.Sub("home"), dir.Sub("support"), dir.Sub("cache"), dir.Sub("temp"));
 
     public static TheoryData<OSKind> AllPlatforms => new() { OSKind.Windows, OSKind.MacOS, OSKind.Linux };
@@ -23,7 +23,7 @@ public class AiFootprintTests
     /// joining the map is the thing worth catching, and taking one off this list is a
     /// small deliberate act.
     /// </summary>
-    static IReadOnlyList<string> MustSurvive(AiPaths p) => new[]
+    static IReadOnlyList<string> MustSurvive(ProfileRoots p) => new[]
     {
         // Logins. Deleting any of these signs the user out of a tool osXos does not own.
         Path.Combine(p.Home, ".claude", ".credentials.json"),
@@ -51,17 +51,23 @@ public class AiFootprintTests
     };
 
     /// <summary>A profile with something in every place the map knows about.</summary>
-    static void Populate(TempDir dir, AiPaths p)
+    static void Populate(TempDir dir, ProfileRoots p)
     {
         foreach (var path in MustSurvive(p)) Write(path, 32);
 
+        // Temp
+        Write(Path.Combine(p.Home, ".claude", "shell-snapshots", "s.sh"), 200);
+        Write(Path.Combine(p.Temp, "claude", "session", "scratch.txt"), 600);
+        Write(Path.Combine(p.Home, ".codex", "tmp", "arg0"), 10);
+        Write(Path.Combine(p.Temp, "codex-clipboard-0fe600fb.png"), 700);
+        Write(Path.Combine(p.Temp, "codex-clipboard-1744c937.png"), 800);
+        Write(Path.Combine(p.Temp, "codex-index-08ed09ff", "index.lock"), 0);
+
         // Scratch
         Write(Path.Combine(p.Home, ".claude", "cache", "a.bin"), 100);
-        Write(Path.Combine(p.Home, ".claude", "shell-snapshots", "s.sh"), 200);
         Write(Path.Combine(p.Home, ".claude", "daemon.log"), 300);
         Write(Path.Combine(p.Home, ".codex", ".sandbox-bin", "codex"), 400);
         Write(Path.Combine(p.Home, ".codex", "logs_2.sqlite"), 500);
-        Write(Path.Combine(p.Temp, "claude", "session", "scratch.txt"), 600);
 
         // History
         Write(Path.Combine(p.Home, ".claude", "projects", "D--Work-repo", "chat.jsonl"), 1000);
@@ -82,7 +88,7 @@ public class AiFootprintTests
         File.WriteAllBytes(path, new byte[bytes]);
     }
 
-    static AiCleanupTool Tool(OSKind os, AiJob job, AiPaths p) => new(os, job, p);
+    static AiCleanupTool Tool(OSKind os, AiJob job, ProfileRoots p) => new(os, job, p);
 
     static async Task<ToolResult> InspectAndRun(AiCleanupTool tool)
     {
@@ -170,6 +176,7 @@ public class AiFootprintTests
         using var dir = new TempDir();
         var paths = Fake(dir);
 
+        var temp = Reach(os, paths, AiJob.Temp);
         var caches = Reach(os, paths, AiJob.Caches);
         var history = Reach(os, paths, AiJob.History);
         var everything = Reach(os, paths, AiJob.Everything);
@@ -178,12 +185,19 @@ public class AiFootprintTests
         Assert.Empty(caches.Except(everything, StringComparer.OrdinalIgnoreCase));
         Assert.Empty(history.Except(everything, StringComparer.OrdinalIgnoreCase));
 
+        // Temp is the narrowest of all: a strict part of Caches, so clearing caches
+        // never leaves temp behind, and nothing a transcript could be in.
+        Assert.NotEmpty(temp);
+        Assert.Empty(temp.Except(caches, StringComparer.OrdinalIgnoreCase));
+        Assert.NotEqual(temp.Count, caches.Count);
+        Assert.Empty(temp.Intersect(history, StringComparer.OrdinalIgnoreCase));
+
         // The wipe is the whole map, not a larger subset of it.
         Assert.Equal(AiFootprint.For(os, paths).Count, everything.Count);
     }
 
     /// <summary>Every path one job could touch, taken through the tool's own filter.</summary>
-    static List<string> Reach(OSKind os, AiPaths paths, AiJob job) =>
+    static List<string> Reach(OSKind os, ProfileRoots paths, AiJob job) =>
         AiFootprint.For(os, paths, Tool(os, job, paths).Spills).Select(t => t.Path).ToList();
 
     // ------------------------------------------------------------- memory folder --
@@ -240,7 +254,7 @@ public class AiFootprintTests
         Populate(dir, paths);
 
         var before = Directory.GetFiles(dir.Path, "*", SearchOption.AllDirectories).OrderBy(x => x).ToList();
-        foreach (var job in new[] { AiJob.Caches, AiJob.History, AiJob.Everything })
+        foreach (var job in Enum.GetValues<AiJob>())
             await Tool(OSKind.Windows, job, paths).InspectAsync(default);
 
         Assert.Equal(before, Directory.GetFiles(dir.Path, "*", SearchOption.AllDirectories).OrderBy(x => x));
@@ -253,7 +267,7 @@ public class AiFootprintTests
         using var dir = new TempDir();
         var paths = Fake(dir);
 
-        foreach (var job in new[] { AiJob.Caches, AiJob.History, AiJob.Everything })
+        foreach (var job in Enum.GetValues<AiJob>())
         {
             var preview = await Tool(os, job, paths).InspectAsync(default);
             Assert.False(preview.CanRun);
@@ -290,7 +304,98 @@ public class AiFootprintTests
         Assert.StartsWith("Claude Code · ", row.Label, StringComparison.Ordinal);
     }
 
+    // --------------------------------------------------------- loose temp files --
+
+    [Theory]
+    [MemberData(nameof(AllPlatforms))]
+    public void Every_pattern_starts_with_a_product_prefix(OSKind os)
+    {
+        // A wildcard in the temp folder is only as safe as the literal part in front
+        // of it. "*.png" would be a search of everyone's temp files; this pins that
+        // no pattern can begin with the wildcard, and that it lives nowhere but Temp.
+        using var dir = new TempDir();
+        var paths = Fake(dir);
+
+        var patterns = AiFootprint.For(os, paths).Where(t => t.IsPattern).ToList();
+
+        Assert.NotEmpty(patterns);
+        Assert.All(patterns, t =>
+        {
+            var name = Path.GetFileName(t.Path);
+            Assert.False(name.StartsWith('*'), $"{t.Path} has no literal prefix");
+            Assert.True(name.IndexOf('*') >= 6, $"{t.Path} has too short a prefix to be a product's own");
+            Assert.Equal(paths.Temp, Path.GetDirectoryName(t.Path));
+        });
+        Assert.All(AiFootprint.For(os, paths).Where(t => !t.IsPattern), t =>
+            Assert.DoesNotContain('*', t.Path));
+    }
+
+    [Fact]
+    public async Task Loose_temp_files_arrive_as_one_row_per_pattern()
+    {
+        using var dir = new TempDir();
+        var paths = Fake(dir);
+        Write(Path.Combine(paths.Temp, "codex-clipboard-a.png"), 700);
+        Write(Path.Combine(paths.Temp, "codex-clipboard-b.png"), 800);
+
+        var preview = await Tool(OSKind.Windows, AiJob.Temp, paths).InspectAsync(default);
+
+        var row = Assert.Single(preview.Items);
+        Assert.Equal("Codex · pasted clipboard images", row.Label);
+        Assert.Equal(1500, row.Bytes);
+    }
+
+    [Fact]
+    public async Task A_pattern_takes_its_matches_and_nothing_that_merely_looks_like_one()
+    {
+        using var dir = new TempDir();
+        var paths = Fake(dir);
+        Write(Path.Combine(paths.Temp, "codex-clipboard-a.png"), 10);
+        Write(Path.Combine(paths.Temp, "codex-index-1", "index.lock"), 0);
+
+        string[] lookalikes =
+        {
+            Path.Combine(paths.Temp, "codex-clipboard-a.pngx"),       // legacy *.png matching would take this
+            Path.Combine(paths.Temp, "my-codex-clipboard-a.png"),     // prefix not at the start
+            Path.Combine(paths.Temp, "codex-notes.txt"),              // the product's name, not its prefix
+            Path.Combine(paths.Temp, "sub", "codex-clipboard-b.png"), // not directly in Temp
+            Path.Combine(paths.Temp, "someone-else.tmp"),
+        };
+        foreach (var path in lookalikes) Write(path, 10);
+
+        var result = await InspectAndRun(Tool(OSKind.Windows, AiJob.Temp, paths));
+
+        Assert.True(result.Ok);
+        Assert.False(File.Exists(Path.Combine(paths.Temp, "codex-clipboard-a.png")));
+        Assert.False(Directory.Exists(Path.Combine(paths.Temp, "codex-index-1")));
+        Assert.All(lookalikes, path => Assert.True(File.Exists(path), $"{path} was deleted"));
+    }
+
     // ----------------------------------------------------------------------- run --
+
+    [Fact]
+    public async Task A_temp_run_takes_the_temp_files_and_leaves_the_caches_and_transcripts()
+    {
+        using var dir = new TempDir();
+        var paths = Fake(dir);
+        Populate(dir, paths);
+
+        var result = await InspectAndRun(Tool(OSKind.Windows, AiJob.Temp, paths));
+
+        Assert.True(result.Ok);
+        Assert.False(Directory.Exists(Path.Combine(paths.Temp, "claude")));
+        Assert.False(Directory.Exists(Path.Combine(paths.Home, ".claude", "shell-snapshots")));
+        Assert.False(Directory.Exists(Path.Combine(paths.Home, ".codex", "tmp")));
+        Assert.Empty(Directory.GetFileSystemEntries(paths.Temp, "codex-*"));
+
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".claude", "cache", "a.bin")));
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".claude", "daemon.log")));
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".codex", "logs_2.sqlite")));
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".codex", "sessions", "s1.jsonl")));
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".claude", "projects", "D--Other", "chat.jsonl")));
+        Assert.True(File.Exists(Path.Combine(paths.Home, ".claude", "plugins", "p", "plugin.json")));
+        Assert.All(MustSurvive(paths), path => Assert.True(File.Exists(path), $"{path} was deleted"));
+    }
 
     [Fact]
     public async Task A_caches_run_deletes_the_scratch_and_leaves_the_transcripts()
@@ -305,6 +410,7 @@ public class AiFootprintTests
         Assert.False(Directory.Exists(Path.Combine(paths.Home, ".claude", "cache")));
         Assert.False(File.Exists(Path.Combine(paths.Home, ".claude", "daemon.log")));
         Assert.False(Directory.Exists(Path.Combine(paths.Temp, "claude")));
+        Assert.Empty(Directory.GetFileSystemEntries(paths.Temp, "codex-*"));
 
         Assert.True(File.Exists(Path.Combine(paths.Home, ".codex", "sessions", "s1.jsonl")));
         Assert.True(File.Exists(Path.Combine(paths.Home, ".claude", "projects", "D--Other", "chat.jsonl")));
@@ -380,22 +486,21 @@ public class AiFootprintTests
 }
 
 /// <summary>
-/// How the three tools present themselves, checked through <see cref="ITool"/> the way
+/// How the four tools present themselves, checked through <see cref="ITool"/> the way
 /// the app sees them rather than through the concrete class.
 /// </summary>
 public class AiCleanupToolTests
 {
     static IEnumerable<AiCleanupTool> All(OSKind os) =>
-        new[] { AiJob.Caches, AiJob.History, AiJob.Everything }
-            .Select(job => new AiCleanupTool(os, job));
+        Enum.GetValues<AiJob>().Select(job => new AiCleanupTool(os, job));
 
     [Fact]
-    public void All_three_appear_in_the_AI_category_on_every_platform()
+    public void All_four_appear_in_the_AI_category_on_every_platform()
     {
         foreach (var os in new[] { OSKind.Windows, OSKind.MacOS, OSKind.Linux })
         {
             var ai = All(os).ToList();
-            Assert.Equal(3, ai.Count);
+            Assert.Equal(4, ai.Count);
             Assert.All(ai, t => Assert.Equal(ToolCategory.AI, t.Category));
             Assert.All(ai, t => Assert.NotNull(CategoryCatalog.Find(os, ToolCategory.AI)));
         }
@@ -413,7 +518,7 @@ public class AiCleanupToolTests
     }
 
     [Fact]
-    public void All_three_are_destructive_and_say_what_they_cost()
+    public void All_four_are_destructive_and_say_what_they_cost()
     {
         Assert.All(All(OSKind.Windows), t =>
         {
@@ -439,7 +544,8 @@ public class AiCleanupToolTests
         var ids = new[] { OSKind.Windows, OSKind.MacOS, OSKind.Linux }
             .SelectMany(All).Select(t => t.Id).ToList();
 
-        Assert.Equal(9, ids.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(12, ids.Distinct(StringComparer.Ordinal).Count());
+        Assert.Contains("windows.ai-temp", ids);
         Assert.Contains("windows.ai-caches", ids);
         Assert.Contains("macos.ai-history", ids);
         Assert.Contains("linux.ai-leftovers", ids);

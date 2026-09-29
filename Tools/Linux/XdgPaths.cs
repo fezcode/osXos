@@ -14,6 +14,9 @@ public static class XdgPaths
     /// <summary>$XDG_CACHE_HOME, or ~/.cache when it is unset or not absolute.</summary>
     public static string CacheHome => Resolve("XDG_CACHE_HOME", ".cache");
 
+    /// <summary>$XDG_CONFIG_HOME, or ~/.config when it is unset or not absolute.</summary>
+    public static string ConfigHome => Resolve("XDG_CONFIG_HOME", ".config");
+
     /// <summary>$XDG_DATA_HOME, or ~/.local/share when it is unset or not absolute.</summary>
     public static string DataHome => Resolve("XDG_DATA_HOME", Path.Combine(".local", "share"));
 

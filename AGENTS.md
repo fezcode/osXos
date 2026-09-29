@@ -93,7 +93,8 @@ steps in order and stop/report any failure before proceeding:
 - Every tool opens in the one shared `ToolWindow`, staged Explain → Review → Result.
   Do not give a tool its own view without a reason that survives being written down.
 - Categories derive from the tools that exist. Never add a "no tools yet" placeholder.
-- Elevation is plumbed and used by exactly one tool (Clear Windows Update Cache).
+- Elevation is plumbed and used by exactly two tools (Clear Windows Update Cache,
+  and Clean Package Cache on Linux).
   `ElevationTests.MayElevate` is the allow-list and a test pins it, so a tool cannot
   gain elevation quietly. A tool that genuinely cannot must set
   `RequiresElevation` (or set `NeedsElevation` on its preview when only this run

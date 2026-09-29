@@ -13,6 +13,11 @@ namespace OsXos.ViewModels;
 /// The settings page, following Cogas's shape: theme and font apply live as you
 /// click them, but nothing is written to disk until Save. Leaving the page dirty
 /// raises the guard prompt in <see cref="MainWindowViewModel"/>.
+///
+/// Light and dark mode is the exception. It is flipped from the top bar and the
+/// menu as often as from here, and a toggle that asked to be saved would be a
+/// toggle that forgets itself — so the mode is written the moment it changes, and
+/// only the palette chosen for each mode waits for Save.
 /// </summary>
 public sealed class SettingsViewModel : ViewModelBase
 {
@@ -20,7 +25,8 @@ public sealed class SettingsViewModel : ViewModelBase
 
     // The last values written to disk. Dirty state is the difference between these
     // and what is on screen, so they move only when a Save actually succeeds.
-    string _savedThemeKey;
+    string _savedLightThemeKey;
+    string _savedDarkThemeKey;
     string _savedFontKey;
     bool _savedAlwaysExplain;
     bool _savedMenuBar;
@@ -29,12 +35,15 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         _services = services;
 
-        _savedThemeKey = services.Settings.Theme;
+        _savedLightThemeKey = services.Settings.LightTheme;
+        _savedDarkThemeKey = services.Settings.DarkTheme;
         _savedFontKey = services.Settings.Font;
         _savedAlwaysExplain = services.Settings.AlwaysExplain;
         _savedMenuBar = services.Settings.MenuBar;
 
-        _selectedTheme = ThemeCatalog.FindTheme(_savedThemeKey);
+        _lightTheme = ThemeCatalog.FindTheme(_savedLightThemeKey, dark: false);
+        _darkTheme = ThemeCatalog.FindTheme(_savedDarkThemeKey, dark: true);
+        _isDarkMode = services.Settings.DarkMode;
         _selectedFont = ThemeCatalog.FindFont(_savedFontKey);
         _alwaysExplain = _savedAlwaysExplain;
         _menuBar = _savedMenuBar;
@@ -43,9 +52,12 @@ public sealed class SettingsViewModel : ViewModelBase
         VersionText = $"osXos v{version?.ToString(3) ?? "dev"}";
 
         // Apply what was saved before anything is drawn.
-        ThemeManager.ApplyTheme(_selectedTheme);
+        ThemeManager.ApplyTheme(SelectedTheme);
         ThemeManager.ApplyFont(_selectedFont);
 
+        ToggleThemeModeCommand = ReactiveCommand.Create(() => { IsDarkMode = !IsDarkMode; });
+        UseLightModeCommand = ReactiveCommand.Create(() => { IsDarkMode = false; });
+        UseDarkModeCommand = ReactiveCommand.Create(() => { IsDarkMode = true; });
         SaveCommand = ReactiveCommand.Create(Save);
         CancelCommand = ReactiveCommand.Create(Revert);
         OpenDataFolderCommand = ReactiveCommand.Create(OpenDataFolder);
@@ -56,16 +68,61 @@ public sealed class SettingsViewModel : ViewModelBase
 
     // ---- appearance ----
 
-    public IReadOnlyList<ThemeDefinition> Themes => ThemeCatalog.Themes;
+    bool _isDarkMode;
 
-    ThemeDefinition _selectedTheme;
-    public ThemeDefinition SelectedTheme
+    /// <summary>
+    /// Which mode is showing. Applied and written straight away, from wherever it is
+    /// flipped — see the class summary for why this one setting skips Save.
+    /// </summary>
+    public bool IsDarkMode
     {
-        get => _selectedTheme;
+        get => _isDarkMode;
         set
         {
-            this.RaiseAndSetIfChanged(ref _selectedTheme, value);
-            if (value != null) ThemeManager.ApplyTheme(value);
+            if (_isDarkMode == value) return;
+            this.RaiseAndSetIfChanged(ref _isDarkMode, value);
+            _services.Settings.Update(d => d with { DarkMode = value });
+
+            // The palette list swaps to the other mode's, and the selection with it.
+            this.RaisePropertyChanged(nameof(IsLightMode));
+            this.RaisePropertyChanged(nameof(Themes));
+            this.RaisePropertyChanged(nameof(SelectedTheme));
+            this.RaisePropertyChanged(nameof(ThemeModeToggleTip));
+            this.RaisePropertyChanged(nameof(PaletteHeading));
+            ThemeManager.ApplyTheme(SelectedTheme);
+        }
+    }
+
+    public bool IsLightMode => !IsDarkMode;
+
+    public string ThemeModeToggleTip => IsDarkMode ? "Switch to light mode" : "Switch to dark mode";
+
+    public string PaletteHeading => IsDarkMode ? "Dark Mode Palette" : "Light Mode Palette";
+
+    public ReactiveCommand<Unit, Unit> ToggleThemeModeCommand { get; }
+    public ReactiveCommand<Unit, Unit> UseLightModeCommand { get; }
+    public ReactiveCommand<Unit, Unit> UseDarkModeCommand { get; }
+
+    /// <summary>Only the current mode's palettes: picking one sets that mode's choice.</summary>
+    public IReadOnlyList<ThemeDefinition> Themes => IsDarkMode ? ThemeCatalog.DarkThemes : ThemeCatalog.LightThemes;
+
+    ThemeDefinition _lightTheme;
+    ThemeDefinition _darkTheme;
+
+    public ThemeDefinition SelectedTheme
+    {
+        get => IsDarkMode ? _darkTheme : _lightTheme;
+        set
+        {
+            // Swapping the list's ItemsSource makes the ListBox push null, or the
+            // outgoing mode's palette, back through this setter. Neither is a choice.
+            if (value == null || value.IsDark != IsDarkMode || value == SelectedTheme) return;
+
+            if (IsDarkMode) _darkTheme = value;
+            else _lightTheme = value;
+
+            this.RaisePropertyChanged();
+            ThemeManager.ApplyTheme(value);
             UpdateDirtyState();
         }
     }
@@ -200,7 +257,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool HasStatus => Status.Length > 0;
 
     void UpdateDirtyState() =>
-        IsDirty = (SelectedTheme?.Key ?? "") != _savedThemeKey ||
+        IsDirty = _lightTheme.Key != _savedLightThemeKey ||
+                  _darkTheme.Key != _savedDarkThemeKey ||
                   (SelectedFont?.Key ?? "") != _savedFontKey ||
                   AlwaysExplain != _savedAlwaysExplain ||
                   MenuBar != _savedMenuBar;
@@ -212,24 +270,28 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public void Save()
     {
-        var theme = SelectedTheme?.Key ?? "default";
+        var light = _lightTheme.Key;
+        var dark = _darkTheme.Key;
         var font = SelectedFont?.Key ?? "neo-grotesque";
 
         var ok = _services.Settings.Update(d => d with
         {
-            Theme = theme,
+            LightTheme = light,
+            DarkTheme = dark,
+            DarkMode = IsDarkMode,
             Font = font,
             AlwaysExplain = AlwaysExplain,
             MenuBar = MenuBar,
         });
 
-        if (SelectedTheme != null) ThemeManager.ApplyTheme(SelectedTheme);
+        ThemeManager.ApplyTheme(SelectedTheme);
         if (SelectedFont != null) ThemeManager.ApplyFont(SelectedFont);
 
         // The baseline moves with what is now in memory whether or not the write
         // landed: the settings are live either way, and leaving the page permanently
         // dirty over an unwritable file would trap the user behind the nav guard.
-        _savedThemeKey = theme;
+        _savedLightThemeKey = light;
+        _savedDarkThemeKey = dark;
         _savedFontKey = font;
         _savedAlwaysExplain = AlwaysExplain;
         _savedMenuBar = MenuBar;
@@ -244,7 +306,9 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public void Revert()
     {
-        SelectedTheme = ThemeCatalog.FindTheme(_savedThemeKey);
+        _lightTheme = ThemeCatalog.FindTheme(_savedLightThemeKey, dark: false);
+        _darkTheme = ThemeCatalog.FindTheme(_savedDarkThemeKey, dark: true);
+        this.RaisePropertyChanged(nameof(SelectedTheme));
         SelectedFont = ThemeCatalog.FindFont(_savedFontKey);
         AlwaysExplain = _savedAlwaysExplain;
         MenuBar = _savedMenuBar;

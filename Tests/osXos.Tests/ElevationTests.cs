@@ -5,8 +5,8 @@ using Xunit;
 namespace OsXos.Tests;
 
 /// <summary>
-/// The elevation plumbing. No tool uses it yet, so what is worth pinning down is the
-/// shape of the commands it would build — getting a quoting rule wrong here means
+/// The elevation plumbing. Two tools use it, so what is worth pinning down is which
+/// ones, and the shape of the commands it builds — getting a quoting rule wrong here means
 /// handing a shell something other than what the UI showed the user.
 /// </summary>
 public class ElevationTests
@@ -16,7 +16,7 @@ public class ElevationTests
     /// not a count: a tool quietly gaining elevation is the thing worth catching, and
     /// adding one here is a small deliberate act that comes with updating the README.
     /// </summary>
-    static readonly string[] MayElevate = { "windows.update-cache" };
+    static readonly string[] MayElevate = { "windows.update-cache", "linux.package-cache" };
 
     [Fact]
     public void Only_the_tools_on_the_list_ask_for_elevation()

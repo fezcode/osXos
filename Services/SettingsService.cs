@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OsXos.Models;
 
 namespace OsXos.Services;
 
@@ -10,7 +11,24 @@ namespace OsXos.Services;
 /// </summary>
 public sealed record SettingsData
 {
-    public string Theme { get; init; } = "default";
+    /// <summary>The palette used while light mode is on.</summary>
+    public string LightTheme { get; init; } = "default";
+
+    /// <summary>The palette used while dark mode is on.</summary>
+    public string DarkTheme { get; init; } = "harbor-night";
+
+    /// <summary>
+    /// Which of the two palettes is showing. Each mode keeps its own palette, so the
+    /// toggle flips between two choices the user made rather than inventing a dark
+    /// version of whichever light palette happens to be selected.
+    /// </summary>
+    public bool DarkMode { get; init; }
+
+    /// <summary>
+    /// The single palette key written before light and dark mode existed. Read once
+    /// to seed the mode it belongs to, and never written again.
+    /// </summary>
+    public string? Theme { get; init; }
     public string Font { get; init; } = "neo-grotesque";
 
     /// <summary>
@@ -60,7 +78,7 @@ public sealed class SettingsService
         try
         {
             if (!File.Exists(FilePath)) return new SettingsData();
-            return JsonSerializer.Deserialize<SettingsData>(File.ReadAllText(FilePath), Json) ?? new SettingsData();
+            return Migrate(JsonSerializer.Deserialize<SettingsData>(File.ReadAllText(FilePath), Json) ?? new SettingsData());
         }
         catch
         {
@@ -68,6 +86,26 @@ public sealed class SettingsService
             // Save overwrites it with something valid.
             return new SettingsData();
         }
+    }
+
+    /// <summary>
+    /// Carries a pre-dark-mode <c>Theme</c> over: a dark palette becomes the dark
+    /// choice with dark mode on, so the app opens looking exactly as it did before
+    /// the upgrade; a light one becomes the light choice.
+    /// </summary>
+    static SettingsData Migrate(SettingsData data)
+    {
+        if (data.Theme is not { } legacy) return data;
+
+        var theme = ThemeCatalog.Themes.FirstOrDefault(t =>
+            string.Equals(t.Key, legacy, StringComparison.OrdinalIgnoreCase));
+
+        return theme switch
+        {
+            null => data with { Theme = null },
+            { IsDark: true } => data with { DarkTheme = theme.Key, DarkMode = true, Theme = null },
+            _ => data with { LightTheme = theme.Key, DarkMode = false, Theme = null },
+        };
     }
 
     /// <summary>Applies a change and writes it out. Returns false if it could not be saved.</summary>
@@ -91,7 +129,9 @@ public sealed class SettingsService
         }
     }
 
-    public string Theme => _data.Theme;
+    public string LightTheme => _data.LightTheme;
+    public string DarkTheme => _data.DarkTheme;
+    public bool DarkMode => _data.DarkMode;
     public string Font => _data.Font;
     public bool AlwaysExplain => _data.AlwaysExplain;
     public bool MenuBar => _data.MenuBar;

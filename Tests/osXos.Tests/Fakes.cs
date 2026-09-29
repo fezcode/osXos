@@ -52,6 +52,50 @@ public sealed class FakeExplorerSettings : IExplorerAdvancedSettings
     public void NotifyShell() => NotifyCount++;
 }
 
+/// <summary>An in-memory HKEY_CURRENT_USER for the toggle tools.</summary>
+public sealed class FakeUserRegistry : IUserRegistry
+{
+    public Dictionary<string, int> Dwords { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public HashSet<string> Keys { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<string> Broadcasts { get; } = new();
+
+    static string Id(string key, string name) => key + "|" + name;
+
+    public int? GetDword(string keyPath, string name) =>
+        Dwords.TryGetValue(Id(keyPath, name), out var v) ? v : null;
+
+    public void SetDword(string keyPath, string name, int value)
+    {
+        Keys.Add(keyPath);
+        Dwords[Id(keyPath, name)] = value;
+    }
+
+    public bool KeyExists(string keyPath) => Keys.Contains(keyPath);
+
+    public void CreateKeyWithEmptyDefault(string keyPath)
+    {
+        // Creating a key creates its parents, as the real registry does.
+        var parts = keyPath.Split('\\');
+        for (var i = 1; i <= parts.Length; i++) Keys.Add(string.Join('\\', parts[..i]));
+    }
+
+    public void DeleteKeyTree(string keyPath) =>
+        Keys.RemoveWhere(k => k.Equals(keyPath, StringComparison.OrdinalIgnoreCase) ||
+                              k.StartsWith(keyPath + "\\", StringComparison.OrdinalIgnoreCase));
+
+    public void BroadcastSettingChange(string area) => Broadcasts.Add(area);
+}
+
+/// <summary>In-memory dark/light values; 1 is light, as on a fresh Windows install.</summary>
+public sealed class FakeWindowsAppearance : IWindowsAppearance
+{
+    public int AppsUseLightTheme { get; set; } = 1;
+    public int SystemUsesLightTheme { get; set; } = 1;
+    public int BroadcastCount { get; private set; }
+
+    public void Broadcast() => BroadcastCount++;
+}
+
 /// <summary>Records what the icon cache tool asked of the shell, and restarts nothing.</summary>
 public sealed class FakeShellController : IShellController
 {

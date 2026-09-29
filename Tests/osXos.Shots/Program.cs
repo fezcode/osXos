@@ -54,6 +54,16 @@ static class Program
 
         ThemeManager.ApplyTheme(ThemeCatalog.FindTheme("default"));
 
+        // Every category page, so a new tool's card is seen in place.
+        var catVm = new MainWindowViewModel(services);
+        foreach (var nav in catVm.NavItems.Where(n => n.Vm is CategoryViewModel).ToList())
+        {
+            var vm = new MainWindowViewModel(services);
+            vm.SelectedNav = vm.NavItems.First(n => n.Name == nav.Name);
+            Shoot("category-" + nav.Name.ToLowerInvariant().Replace(" & ", "-").Replace(' ', '-'),
+                new MainWindow { DataContext = vm }, 1180, 900);
+        }
+
         // Settings, and the main window with About open.
         var settingsVm = new MainWindowViewModel(services);
         settingsVm.SelectedNav = settingsVm.NavItems[^1];
@@ -64,6 +74,27 @@ static class Program
         var tallVm = new MainWindowViewModel(services);
         tallVm.SelectedNav = tallVm.NavItems[^1];
         Shoot("settings-tall", new MainWindow { DataContext = tallVm }, 1180, 1560);
+
+        // Both modes through the real toggle rather than ApplyTheme, so the top-bar
+        // icon and the Settings switch are drawn in the state the app puts them in.
+        // A throwaway data directory, because the toggle writes the mode to disk.
+        var modeDir = Path.Combine(Path.GetTempPath(), "osxos-shots-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var modeServices = new AppServices(modeDir);
+            foreach (var dark in new[] { false, true })
+            {
+                var modeVm = new MainWindowViewModel(modeServices);
+                modeVm.Settings.IsDarkMode = dark;
+                modeVm.SelectedNav = modeVm.NavItems[^1];
+                Shoot(dark ? "mode-dark" : "mode-light", new MainWindow { DataContext = modeVm }, 1180, 760);
+            }
+        }
+        finally
+        {
+            try { Directory.Delete(modeDir, recursive: true); } catch { }
+        }
+        ThemeManager.ApplyTheme(ThemeCatalog.FindTheme("default"));
 
         var aboutVm = new MainWindowViewModel(services);
         aboutVm.OpenAboutCommand.Execute().Subscribe(_ => { });

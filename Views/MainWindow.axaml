@@ -196,8 +196,19 @@
                 </Button>
               </Grid>
 
-              <!-- Running-OS pill and window controls -->
+              <!-- Light/dark toggle, running-OS pill and window controls -->
               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <!-- Shows the mode a click leads to, not the one already on screen. -->
+                <Button Classes="WindowCtrl" Command="{Binding Settings.ToggleThemeModeCommand}"
+                        ToolTip.Tip="{Binding Settings.ThemeModeToggleTip}" Margin="0,0,8,0">
+                  <Panel>
+                    <PathIcon Data="{StaticResource IconMoon}" Width="13" Height="13"
+                              Foreground="{DynamicResource Muted}" IsVisible="{Binding Settings.IsLightMode}"/>
+                    <PathIcon Data="{StaticResource IconSun}" Width="14" Height="14"
+                              Foreground="{DynamicResource Muted}" IsVisible="{Binding Settings.IsDarkMode}"/>
+                  </Panel>
+                </Button>
+
                 <Border Background="{DynamicResource SurfaceHover}" CornerRadius="6" Padding="8,3"
                         BorderBrush="{DynamicResource Line}" BorderThickness="1"
                         Margin="0,0,14,0"
@@ -345,7 +356,7 @@
                 <StackPanel Spacing="6">
                   <TextBlock Text="ELEVATION" Classes="eyebrow"/>
                   <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
-                             Text="Every tool shipped today works entirely within your own user account — no UAC prompt, no sudo, no polkit. A tool that genuinely cannot must say so on its Review stage, and osXos elevates that one command rather than running itself as administrator."/>
+                             Text="Almost every tool works entirely within your own user account — no UAC prompt, no sudo, no polkit. The two that cannot, Clear Windows Update Cache and Clean Package Cache on Linux, say so on their Review stage, and osXos elevates that one command rather than running itself as administrator."/>
                 </StackPanel>
               </Border>
 

@@ -22,9 +22,16 @@ public sealed class AppServices
     public OSKind OS { get; }
 
     public AppServices()
+        : this(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "fezcode", "osxos")) { }
+
+    /// <summary>
+    /// Everything wired against a data directory of the caller's choosing, so a test
+    /// can drive the real view models without reading or writing the user's settings.
+    /// </summary>
+    public AppServices(string dataDir)
     {
-        DataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "fezcode", "osxos");
+        DataDir = dataDir;
 
         try { Directory.CreateDirectory(DataDir); }
         catch { /* SettingsService falls back to defaults and reports a failed save */ }

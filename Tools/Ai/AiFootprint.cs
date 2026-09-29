@@ -8,9 +8,17 @@ namespace OsXos.Tools.Ai;
 public enum AiSpill
 {
     /// <summary>
-    /// Reproducible by definition: caches, logs, sandbox binaries, scratch folders,
-    /// downloaded installer payloads. Deleting any of it costs a slower next launch
-    /// and nothing else.
+    /// Written for one session and never read again: per-session scratchpads, temp
+    /// folders, shell snapshots, pasted clipboard images, throwaway git indexes. Not
+    /// even a cache — nothing is slower for its absence — so it is the one kind of
+    /// spill a tool can take without the user giving anything up.
+    /// </summary>
+    Temp,
+
+    /// <summary>
+    /// Reproducible by definition: caches, logs, sandbox binaries, downloaded
+    /// installer payloads. Deleting any of it costs a slower next launch and nothing
+    /// else.
     /// </summary>
     Scratch,
 
@@ -30,64 +38,12 @@ public enum AiSpill
 }
 
 /// <summary>
-/// One place an AI assistant leaves things. <paramref name="Path"/> is absolute and
-/// always resolved from an <see cref="AiPaths"/>, never from the environment directly,
-/// so the whole map can be pointed at a temp directory in a test.
+/// One place an AI assistant leaves things, and which kind of spill it is. Everything
+/// about how it is measured and deleted is a <see cref="Location"/>'s; the spill is
+/// the only thing the three AI tools add, because it is what they filter on.
 /// </summary>
 public sealed record AiTarget(string Product, string Label, string Path, AiSpill Spill)
-{
-    /// <summary>
-    /// Set when this target is a container rather than a thing: its immediate
-    /// subdirectories become the rows, and inside each of those a child of this name
-    /// is left alone.
-    ///
-    /// <c>~/.claude/projects</c> is the shape this exists for. Each project folder
-    /// holds the transcripts that are the entire point of the history tool sitting
-    /// next to a <c>memory/</c> folder that is hand-written and must survive.
-    /// </summary>
-    public string? PreservedChild { get; init; }
-}
-
-/// <summary>
-/// The four roots every AI tool path is built from, as one value. Supplying them
-/// rather than reading the environment is what lets <see cref="AiFootprint"/> be a
-/// pure function — the tests build a fake home under a temp directory, and
-/// <see cref="AiCleanupTool.RunAsync"/> rebuilds the same map it inspected instead of
-/// carrying a mutable list between the two stages.
-/// </summary>
-public sealed record AiPaths(string Home, string AppSupport, string AppCache, string Temp)
-{
-    /// <summary>
-    /// Where this OS actually keeps the four. <c>AppSupport</c> is the roaming,
-    /// configuration-shaped root and <c>AppCache</c> the local, throwaway-shaped one;
-    /// Windows splits them as Roaming and Local, macOS as Application Support and
-    /// Caches, Linux as the XDG config and cache homes.
-    /// </summary>
-    public static AiPaths Current(OSKind os)
-    {
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return os switch
-        {
-            OSKind.Windows => new AiPaths(
-                home,
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                System.IO.Path.GetTempPath()),
-
-            OSKind.MacOS => new AiPaths(
-                home,
-                System.IO.Path.Combine(home, "Library", "Application Support"),
-                System.IO.Path.Combine(home, "Library", "Caches"),
-                Environment.GetEnvironmentVariable("TMPDIR") is { Length: > 0 } tmp ? tmp : "/tmp"),
-
-            _ => new AiPaths(
-                Linux.XdgPaths.Home,
-                System.IO.Path.Combine(Linux.XdgPaths.Home, ".config"),
-                Linux.XdgPaths.CacheHome,
-                "/tmp"),
-        };
-    }
-}
+    : Location(Product, Label, Path);
 
 /// <summary>
 /// Every place osXos knows an AI assistant leaves something, and the two operations
@@ -107,9 +63,9 @@ public sealed record AiPaths(string Home, string AppSupport, string AppCache, st
 public static class AiFootprint
 {
     /// <summary>Every target for this OS, grouped by product in display order.</summary>
-    public static IReadOnlyList<AiTarget> For(OSKind os) => For(os, AiPaths.Current(os));
+    public static IReadOnlyList<AiTarget> For(OSKind os) => For(os, ProfileRoots.Current(os));
 
-    public static IReadOnlyList<AiTarget> For(OSKind os, AiPaths paths)
+    public static IReadOnlyList<AiTarget> For(OSKind os, ProfileRoots paths)
     {
         var targets = new List<AiTarget>();
         targets.AddRange(ClaudeCode(paths));
@@ -125,7 +81,7 @@ public static class AiFootprint
     }
 
     /// <summary>The targets one job is allowed to touch.</summary>
-    public static IReadOnlyList<AiTarget> For(OSKind os, AiPaths paths, IReadOnlyCollection<AiSpill> spills) =>
+    public static IReadOnlyList<AiTarget> For(OSKind os, ProfileRoots paths, IReadOnlyCollection<AiSpill> spills) =>
         For(os, paths).Where(t => spills.Contains(t.Spill)).ToList();
 
     // ---------------------------------------------------------------- products --
@@ -135,15 +91,15 @@ public static class AiFootprint
     /// entirely: <c>.credentials.json</c>, <c>settings.json</c>, <c>skills/</c>, and
     /// <c>~/.claude.json</c> alongside it.
     /// </summary>
-    static IEnumerable<AiTarget> ClaudeCode(AiPaths p)
+    static IEnumerable<AiTarget> ClaudeCode(ProfileRoots p)
     {
         var root = Path.Combine(p.Home, ".claude");
         const string product = "Claude Code";
 
         yield return new(product, "cache", Path.Combine(root, "cache"), AiSpill.Scratch);
         yield return new(product, "pasted-content cache", Path.Combine(root, "paste-cache"), AiSpill.Scratch);
-        yield return new(product, "shell snapshots", Path.Combine(root, "shell-snapshots"), AiSpill.Scratch);
-        yield return new(product, "session environments", Path.Combine(root, "session-env"), AiSpill.Scratch);
+        yield return new(product, "shell snapshots", Path.Combine(root, "shell-snapshots"), AiSpill.Temp);
+        yield return new(product, "session environments", Path.Combine(root, "session-env"), AiSpill.Temp);
         yield return new(product, "background jobs", Path.Combine(root, "jobs"), AiSpill.Scratch);
         yield return new(product, "daemon state", Path.Combine(root, "daemon"), AiSpill.Scratch);
         yield return new(product, "daemon log", Path.Combine(root, "daemon.log"), AiSpill.Scratch);
@@ -169,13 +125,21 @@ public static class AiFootprint
     /// <c>config.toml</c>, <c>.sandbox-secrets</c>, <c>skills/</c> and
     /// <c>memories_1.sqlite</c>.
     /// </summary>
-    static IEnumerable<AiTarget> Codex(AiPaths p)
+    static IEnumerable<AiTarget> Codex(ProfileRoots p)
     {
         var root = Path.Combine(p.Home, ".codex");
         const string product = "Codex";
 
-        yield return new(product, "scratch", Path.Combine(root, ".tmp"), AiSpill.Scratch);
-        yield return new(product, "temp", Path.Combine(root, "tmp"), AiSpill.Scratch);
+        yield return new(product, "scratch", Path.Combine(root, ".tmp"), AiSpill.Temp);
+        yield return new(product, "temp", Path.Combine(root, "tmp"), AiSpill.Temp);
+
+        // Loose in the system temp folder rather than under ~/.codex, and never
+        // cleaned up: every image pasted into a prompt, and the throwaway git index
+        // each working-tree snapshot is built with.
+        yield return new(product, "pasted clipboard images",
+            Path.Combine(p.Temp, "codex-clipboard-*.png"), AiSpill.Temp) { IsPattern = true };
+        yield return new(product, "snapshot git indexes",
+            Path.Combine(p.Temp, "codex-index-*"), AiSpill.Temp) { IsPattern = true };
         yield return new(product, "cache", Path.Combine(root, "cache"), AiSpill.Scratch);
         yield return new(product, "sandbox", Path.Combine(root, ".sandbox"), AiSpill.Scratch);
         yield return new(product, "sandbox binaries", Path.Combine(root, ".sandbox-bin"), AiSpill.Scratch);
@@ -206,13 +170,15 @@ public static class AiFootprint
     /// of the map entirely: <c>oauth_creds.json</c>, <c>google_accounts.json</c>,
     /// <c>settings.json</c>, <c>trustedFolders.json</c> and <c>GEMINI.md</c>.
     /// </summary>
-    static IEnumerable<AiTarget> Gemini(AiPaths p)
+    static IEnumerable<AiTarget> Gemini(ProfileRoots p)
     {
         var root = Path.Combine(p.Home, ".gemini");
         const string product = "Gemini & Antigravity";
 
-        yield return new(product, "temp", Path.Combine(root, "tmp"), AiSpill.Scratch);
-
+        // Despite the name, ~/.gemini/tmp is where the Gemini CLI keeps each project's
+        // saved chats and prompt log (tmp/<project>/chats, logs.json). It is history,
+        // and a cache clear must not take it.
+        yield return new(product, "project chats and logs", Path.Combine(root, "tmp"), AiSpill.History);
         yield return new(product, "prompt history", Path.Combine(root, "history"), AiSpill.History);
 
         yield return new(product, "settings backup", Path.Combine(root, "antigravity-backup"), AiSpill.Residue);
@@ -225,11 +191,11 @@ public static class AiFootprint
 
     // --------------------------------------------------------------- platforms --
 
-    static IEnumerable<AiTarget> WindowsOnly(AiPaths p)
+    static IEnumerable<AiTarget> WindowsOnly(ProfileRoots p)
     {
         // The per-session scratchpad directories every Claude Code run creates.
         yield return new("Claude Code", "session scratchpads",
-            Path.Combine(p.Temp, "claude"), AiSpill.Scratch);
+            Path.Combine(p.Temp, "claude"), AiSpill.Temp);
 
         foreach (var t in Electron("Claude Desktop", Path.Combine(p.AppSupport, "Claude"))) yield return t;
         foreach (var t in Electron("Claude Desktop", Path.Combine(p.AppSupport, "Claude-3p"))) yield return t;
@@ -252,10 +218,10 @@ public static class AiFootprint
         foreach (var t in Electron("Antigravity IDE", Path.Combine(p.AppSupport, "Antigravity IDE"))) yield return t;
     }
 
-    static IEnumerable<AiTarget> MacOnly(AiPaths p)
+    static IEnumerable<AiTarget> MacOnly(ProfileRoots p)
     {
         yield return new("Claude Code", "session scratchpads",
-            Path.Combine(p.Temp, "claude"), AiSpill.Scratch);
+            Path.Combine(p.Temp, "claude"), AiSpill.Temp);
 
         foreach (var t in Electron("Claude Desktop", Path.Combine(p.AppSupport, "Claude"))) yield return t;
 
@@ -271,10 +237,10 @@ public static class AiFootprint
         foreach (var t in Electron("Antigravity", Path.Combine(p.AppSupport, "Antigravity"))) yield return t;
     }
 
-    static IEnumerable<AiTarget> LinuxOnly(AiPaths p)
+    static IEnumerable<AiTarget> LinuxOnly(ProfileRoots p)
     {
         yield return new("Claude Code", "session scratchpads",
-            Path.Combine(p.Temp, "claude"), AiSpill.Scratch);
+            Path.Combine(p.Temp, "claude"), AiSpill.Temp);
         yield return new("Claude Code", "cache",
             Path.Combine(p.AppCache, "claude"), AiSpill.Scratch);
 
@@ -313,126 +279,19 @@ public static class AiFootprint
 
     // ------------------------------------------------------------- inspect/run --
 
-    /// <summary>
-    /// What one target actually amounts to on this machine, as Review rows. A target
-    /// that is not there yields nothing — a machine that never installed Codex is not
-    /// an error, it is the normal case for two of the three products.
-    /// </summary>
-    public static IEnumerable<PreviewItem> Rows(AiTarget target, CancellationToken ct = default)
-    {
-        if (target.PreservedChild is null)
-        {
-            var size = Measure(target.Path, ct);
-            if (size is null) yield break;
-            yield return new PreviewItem($"{target.Product} · {target.Label}", target.Path, size);
-            yield break;
-        }
-
-        string[] subdirs;
-        try { subdirs = Directory.GetDirectories(target.Path); }
-        catch { yield break; }
-
-        foreach (var sub in subdirs.OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
-        {
-            ct.ThrowIfCancellationRequested();
-
-            long total = 0;
-            var any = false;
-            foreach (var child in Deletable(sub, target.PreservedChild))
-            {
-                any = true;
-                total += Measure(child, ct) ?? 0;
-            }
-
-            if (!any) continue;
-            yield return new PreviewItem(
-                $"{target.Product} · {target.Label} — {Path.GetFileName(sub)}", sub, total);
-        }
-    }
+    /// <summary>What one target actually amounts to on this machine, as Review rows.</summary>
+    public static IEnumerable<PreviewItem> Rows(AiTarget target, CancellationToken ct = default) =>
+        LocationSweep.Rows(target, ct);
 
     /// <summary>
-    /// Deletes rows the user approved on Review. Rows belonging to a target with a
-    /// <see cref="AiTarget.PreservedChild"/> are expanded into their deletable
-    /// children first, so the preserved folder is never handed to the sweep at all
-    /// rather than being handed over and skipped.
+    /// Deletes rows the user approved on Review. Rows belonging to a project folder
+    /// are expanded into their deletable children first, so <c>memory/</c> is never
+    /// handed to the sweep at all rather than being handed over and skipped.
     /// </summary>
     public static SweepOutcome Delete(
         IReadOnlyList<AiTarget> targets,
         IEnumerable<PreviewItem> items,
         IProgress<ToolProgress>? progress = null,
-        CancellationToken ct = default)
-    {
-        var expanded = new List<PreviewItem>();
-
-        foreach (var item in items)
-        {
-            var path = item.Detail;
-            if (string.IsNullOrEmpty(path)) continue;
-
-            var preserved = PreservedChildFor(targets, path);
-            if (preserved is null)
-            {
-                expanded.Add(item);
-                continue;
-            }
-
-            foreach (var child in Deletable(path, preserved))
-                expanded.Add(new PreviewItem(item.Label, child, Measure(child, ct)));
-        }
-
-        return FileSweep.Delete(expanded, progress, ct);
-    }
-
-    /// <summary>
-    /// The name to preserve inside <paramref name="path"/>, when it is a row produced
-    /// by a container target. Matched by asking whether the row's parent is that
-    /// target's directory, which is what makes the lookup a pure function of the map
-    /// and the path rather than state left over from the inspection.
-    /// </summary>
-    static string? PreservedChildFor(IReadOnlyList<AiTarget> targets, string path)
-    {
-        var parent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(path));
-        if (parent is null) return null;
-
-        return targets.FirstOrDefault(t =>
-            t.PreservedChild is not null &&
-            string.Equals(
-                Path.TrimEndingDirectorySeparator(t.Path), parent,
-                StringComparison.OrdinalIgnoreCase))?.PreservedChild;
-    }
-
-    /// <summary>Everything directly inside <paramref name="dir"/> except one name.</summary>
-    static IEnumerable<string> Deletable(string dir, string preserved)
-    {
-        string[] entries;
-        try { entries = Directory.GetFileSystemEntries(dir); }
-        catch { yield break; }
-
-        foreach (var entry in entries.OrderBy(e => e, StringComparer.OrdinalIgnoreCase))
-        {
-            if (string.Equals(Path.GetFileName(entry), preserved, StringComparison.OrdinalIgnoreCase))
-                continue;
-            yield return entry;
-        }
-    }
-
-    /// <summary>
-    /// The size of a file or a directory tree, or null when the path is not there at
-    /// all. A file is measured with one stat rather than a walk, which matters:
-    /// expanding a project folder measures a few dozen transcripts, and walking each
-    /// one as though it might be a tree would double the cost of the whole scan.
-    /// </summary>
-    static long? Measure(string path, CancellationToken ct)
-    {
-        try
-        {
-            if (File.Exists(path)) return new FileInfo(path).Length;
-        }
-        catch
-        {
-            return null;
-        }
-
-        return Directory.Exists(path) ? FileSweep.SizeOf(path, ct) : null;
-    }
+        CancellationToken ct = default) =>
+        LocationSweep.Delete(targets, items, progress, ct);
 }
