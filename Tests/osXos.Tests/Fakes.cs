@@ -56,6 +56,7 @@ public sealed class FakeExplorerSettings : IExplorerAdvancedSettings
 public sealed class FakeUserRegistry : IUserRegistry
 {
     public Dictionary<string, int> Dwords { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, string> Strings { get; } = new(StringComparer.OrdinalIgnoreCase);
     public HashSet<string> Keys { get; } = new(StringComparer.OrdinalIgnoreCase);
     public List<string> Broadcasts { get; } = new();
 
@@ -72,6 +73,21 @@ public sealed class FakeUserRegistry : IUserRegistry
 
     public bool KeyExists(string keyPath) => Keys.Contains(keyPath);
 
+    public string? GetString(string keyPath, string name) =>
+        Strings.TryGetValue(Id(keyPath, name), out var v) ? v : null;
+
+    public void SetString(string keyPath, string name, string value)
+    {
+        Keys.Add(keyPath);
+        Strings[Id(keyPath, name)] = value;
+    }
+
+    public void DeleteValue(string keyPath, string name)
+    {
+        Strings.Remove(Id(keyPath, name));
+        Dwords.Remove(Id(keyPath, name));
+    }
+
     public void CreateKeyWithEmptyDefault(string keyPath)
     {
         // Creating a key creates its parents, as the real registry does.
@@ -84,6 +100,49 @@ public sealed class FakeUserRegistry : IUserRegistry
                               k.StartsWith(keyPath + "\\", StringComparison.OrdinalIgnoreCase));
 
     public void BroadcastSettingChange(string area) => Broadcasts.Add(area);
+}
+
+/// <summary>A taskbar that can be hidden without anything disappearing from the screen.</summary>
+public sealed class FakeTaskbar : ITaskbarController
+{
+    public List<long> Handles { get; } = new() { 100, 200 };
+    public bool Exists
+    {
+        get => Handles.Count > 0;
+        set { Handles.Clear(); if (value) Handles.AddRange(new long[] { 100, 200 }); }
+    }
+    public bool IsHidden { get; set; }
+    public bool AutoHide { get; set; }
+    public int HideCalls { get; private set; }
+
+    public int SetVisible(bool visible)
+    {
+        IsHidden = !visible;
+        if (!visible) HideCalls++;
+        return Handles.Count;
+    }
+
+    public IReadOnlyList<long> Windows() => Handles.ToList();
+}
+
+/// <summary>Records keeper starts and stops without launching anything.</summary>
+public sealed class FakeKeeper : ITaskbarKeeperProcess
+{
+    public bool IsRunning { get; private set; }
+    public List<string> Started { get; } = new();
+    public int Stops { get; private set; }
+
+    public void Start(string exe)
+    {
+        Started.Add(exe);
+        IsRunning = true;
+    }
+
+    public void Stop()
+    {
+        Stops++;
+        IsRunning = false;
+    }
 }
 
 /// <summary>In-memory dark/light values; 1 is light, as on a fresh Windows install.</summary>

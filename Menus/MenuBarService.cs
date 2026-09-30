@@ -31,12 +31,11 @@ public sealed class MenuBarService : IAsyncDisposable
             _ => new HisashiMenuBridge(model, version),
         };
 
-        // The tree carries checkmarks for the current page and dark mode, and the
-        // state of the search box, so it has to follow the app rather than be sent once.
+        // The tree carries checkmarks for the current page and the state of the
+        // search box, so it has to follow the app rather than be sent once.
         model.Changed += () => _bridge.Refresh();
         vm.WhenAnyValue(x => x.SelectedNav).Subscribe(_ => _bridge.Refresh());
         vm.WhenAnyValue(x => x.HasQuery).Subscribe(_ => _bridge.Refresh());
-        vm.Settings.WhenAnyValue(x => x.IsDarkMode).Subscribe(_ => _bridge.Refresh());
 
         vm.Settings.MenuBarChanged = on => _bridge.SetEnabled(on);
     }

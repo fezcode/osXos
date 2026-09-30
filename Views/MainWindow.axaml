@@ -196,19 +196,8 @@
                 </Button>
               </Grid>
 
-              <!-- Light/dark toggle, running-OS pill and window controls -->
+              <!-- Running-OS pill and window controls -->
               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <!-- Shows the mode a click leads to, not the one already on screen. -->
-                <Button Classes="WindowCtrl" Command="{Binding Settings.ToggleThemeModeCommand}"
-                        ToolTip.Tip="{Binding Settings.ThemeModeToggleTip}" Margin="0,0,8,0">
-                  <Panel>
-                    <PathIcon Data="{StaticResource IconMoon}" Width="13" Height="13"
-                              Foreground="{DynamicResource Muted}" IsVisible="{Binding Settings.IsLightMode}"/>
-                    <PathIcon Data="{StaticResource IconSun}" Width="14" Height="14"
-                              Foreground="{DynamicResource Muted}" IsVisible="{Binding Settings.IsDarkMode}"/>
-                  </Panel>
-                </Button>
-
                 <Border Background="{DynamicResource SurfaceHover}" CornerRadius="6" Padding="8,3"
                         BorderBrush="{DynamicResource Line}" BorderThickness="1"
                         Margin="0,0,14,0"

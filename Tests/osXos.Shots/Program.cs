@@ -75,9 +75,9 @@ static class Program
         tallVm.SelectedNav = tallVm.NavItems[^1];
         Shoot("settings-tall", new MainWindow { DataContext = tallVm }, 1180, 1560);
 
-        // Both modes through the real toggle rather than ApplyTheme, so the top-bar
-        // icon and the Settings switch are drawn in the state the app puts them in.
-        // A throwaway data directory, because the toggle writes the mode to disk.
+        // Both modes through the Settings switch rather than ApplyTheme, so the switch
+        // is drawn in the state the app puts it in. A throwaway data directory, so
+        // nothing here can reach the real settings file.
         var modeDir = Path.Combine(Path.GetTempPath(), "osxos-shots-" + Guid.NewGuid().ToString("N"));
         try
         {

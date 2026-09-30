@@ -19,6 +19,14 @@ public interface IUserRegistry
 
     bool KeyExists(string keyPath);
 
+    /// <summary>A string value, or null when it or its key is absent.</summary>
+    string? GetString(string keyPath, string name);
+
+    void SetString(string keyPath, string name, string value);
+
+    /// <summary>Deletes one value. Missing is not an error.</summary>
+    void DeleteValue(string keyPath, string name);
+
     /// <summary>Creates the key (and its parents) with an empty default value.</summary>
     void CreateKeyWithEmptyDefault(string keyPath);
 
@@ -65,6 +73,31 @@ public sealed class WindowsUserRegistry : IUserRegistry
         {
             return false;
         }
+    }
+
+    public string? GetString(string keyPath, string name)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(keyPath);
+            return key?.GetValue(name) as string;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public void SetString(string keyPath, string name, string value)
+    {
+        using var key = Registry.CurrentUser.CreateSubKey(keyPath, writable: true);
+        key.SetValue(name, value, RegistryValueKind.String);
+    }
+
+    public void DeleteValue(string keyPath, string name)
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(keyPath, writable: true);
+        key?.DeleteValue(name, throwOnMissingValue: false);
     }
 
     public void CreateKeyWithEmptyDefault(string keyPath)

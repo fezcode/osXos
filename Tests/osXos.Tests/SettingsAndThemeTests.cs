@@ -237,17 +237,36 @@ public class ThemeModeTests
     static SettingsViewModel Vm(TempDir dir) => new(new AppServices(dir.Path));
 
     [Fact]
-    public void Toggling_flips_the_mode_and_remembers_it_without_a_save()
+    public void Switching_mode_applies_live_and_waits_for_save_like_the_rest()
     {
         using var dir = new TempDir();
         var vm = Vm(dir);
         Assert.False(vm.IsDarkMode);
 
-        vm.ToggleThemeModeCommand.Execute().Subscribe();
+        vm.UseDarkModeCommand.Execute().Subscribe();
 
         Assert.True(vm.IsDarkMode);
+        Assert.True(vm.IsDirty);
+        Assert.False(new SettingsService(dir.Path).DarkMode);
+
+        vm.Save();
+
         Assert.False(vm.IsDirty);
         Assert.True(new SettingsService(dir.Path).DarkMode);
+    }
+
+    [Fact]
+    public void Discard_puts_the_mode_back_too()
+    {
+        using var dir = new TempDir();
+        var vm = Vm(dir);
+
+        vm.IsDarkMode = true;
+        vm.Revert();
+
+        Assert.False(vm.IsDarkMode);
+        Assert.False(vm.IsDirty);
+        Assert.Equal("default", vm.SelectedTheme.Key);
     }
 
     [Fact]
@@ -310,30 +329,16 @@ public class ThemeModeTests
         vm.Revert();
 
         Assert.False(vm.IsDirty);
-        Assert.Equal("harbor-night", vm.SelectedTheme.Key);
-        Assert.True(vm.IsDarkMode);
+        Assert.False(vm.IsDarkMode);
+        Assert.Equal("default", vm.SelectedTheme.Key);
 
+        vm.IsDarkMode = true;
+        Assert.Equal("harbor-night", vm.SelectedTheme.Key);
         vm.SelectedTheme = ThemeCatalog.FindTheme("lantern-oak");
         vm.Save();
 
         var saved = new SettingsService(dir.Path);
         Assert.Equal("lantern-oak", saved.DarkTheme);
         Assert.Equal("default", saved.LightTheme);
-    }
-
-    [Fact]
-    public void The_view_menu_carries_a_dark_mode_row_that_follows_the_mode()
-    {
-        using var dir = new TempDir();
-        var services = new AppServices(dir.Path);
-        var main = new MainWindowViewModel(services);
-        var model = new AppMenuModel(main, services.Tools, services.OS);
-
-        AppMenuNode Row() => model.Build().Single(m => m.Id == "view").Items!.Single(i => i.Id == "view.darkmode");
-
-        Assert.Equal(false, Row().Check);
-        model.Invoke("view.darkmode");
-        Assert.True(main.Settings.IsDarkMode);
-        Assert.Equal(true, Row().Check);
     }
 }

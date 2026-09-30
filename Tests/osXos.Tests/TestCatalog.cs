@@ -16,7 +16,9 @@ public static class TestCatalog
         IRecycleBin? recycleBin = null,
         IShellController? shell = null,
         IWindowsAppearance? appearance = null,
-        IUserRegistry? userRegistry = null)
+        IUserRegistry? userRegistry = null,
+        ITaskbarController? taskbar = null,
+        ITaskbarKeeperProcess? keeper = null)
     {
         runner ??= new FakeRunner();
         return ToolCatalog.Windows(
@@ -27,6 +29,8 @@ public static class TestCatalog
             new ElevationService(runner),
             shell ?? new FakeShellController(),
             appearance ?? new FakeWindowsAppearance(),
-            userRegistry ?? new FakeUserRegistry());
+            userRegistry ?? new FakeUserRegistry(),
+            taskbar ?? new FakeTaskbar(),
+            keeper ?? new FakeKeeper());
     }
 }

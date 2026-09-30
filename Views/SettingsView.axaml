@@ -127,7 +127,7 @@
             <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
               <StackPanel Spacing="2" VerticalAlignment="Center">
                 <TextBlock Text="Mode" FontWeight="SemiBold" FontSize="13"/>
-                <TextBlock Text="Also on the top bar and in the View menu. Remembered as soon as you switch."
+                <TextBlock Text="Each mode has its own palette below. Applies straight away; kept on Save."
                            FontSize="11" Classes="muted" TextWrapping="Wrap"/>
               </StackPanel>
 

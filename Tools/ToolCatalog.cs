@@ -23,11 +23,15 @@ public static class ToolCatalog
         IElevationService? elevation = null,
         IShellController? shell = null,
         IWindowsAppearance? appearance = null,
-        IUserRegistry? userRegistry = null)
+        IUserRegistry? userRegistry = null,
+        ITaskbarController? taskbar = null,
+        ITaskbarKeeperProcess? keeper = null)
     {
         registry ??= CreateRegistry();
         appearance ??= CreateAppearance();
         userRegistry ??= CreateUserRegistry();
+        taskbar ??= CreateTaskbar();
+        keeper ??= CreateKeeper();
         recycleBin ??= CreateRecycleBin();
         elevation ??= new ElevationService(runner);
         shell ??= new ExplorerController();
@@ -49,6 +53,7 @@ public static class ToolCatalog
             new ClassicContextMenuTool(userRegistry, shell),
             new ExplorerToggleTool(ExplorerToggleTool.ClockSeconds, userRegistry),
             new ExplorerToggleTool(ExplorerToggleTool.FullPathTitle, userRegistry),
+            new HideTaskbarTool(taskbar, userRegistry, keeper),
 
             // System
             new Tools.Windows.DarkModeTool(appearance),
@@ -178,7 +183,9 @@ public static class ToolCatalog
                 new ElevationService(runner),
                 new ExplorerController(),
                 new UnavailableAppearance(),
-                new UnavailableUserRegistry()).Count,
+                new UnavailableUserRegistry(),
+                new UnavailableTaskbar(),
+                new UnavailableKeeper()).Count,
             OSKind.MacOS => MacOS(runner).Count,
             _ => Linux(runner).Count,
         };
@@ -198,6 +205,22 @@ public static class ToolCatalog
             throw new PlatformNotSupportedException(
                 "The Windows tool set needs an IRecycleBin supplied when built off Windows.");
         return new ShellRecycleBin();
+    }
+
+    static ITaskbarKeeperProcess CreateKeeper()
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(
+                "The Windows tool set needs an ITaskbarKeeperProcess supplied when built off Windows.");
+        return new WindowsTaskbarKeeperProcess();
+    }
+
+    static ITaskbarController CreateTaskbar()
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(
+                "The Windows tool set needs an ITaskbarController supplied when built off Windows.");
+        return new WindowsTaskbarController();
     }
 
     static IUserRegistry CreateUserRegistry()
@@ -268,9 +291,34 @@ public static class ToolCatalog
         public int? GetDword(string keyPath, string name) => throw new PlatformNotSupportedException();
         public void SetDword(string keyPath, string name, int value) => throw new PlatformNotSupportedException();
         public bool KeyExists(string keyPath) => throw new PlatformNotSupportedException();
+        public string? GetString(string keyPath, string name) => throw new PlatformNotSupportedException();
+        public void SetString(string keyPath, string name, string value) => throw new PlatformNotSupportedException();
+        public void DeleteValue(string keyPath, string name) => throw new PlatformNotSupportedException();
         public void CreateKeyWithEmptyDefault(string keyPath) => throw new PlatformNotSupportedException();
         public void DeleteKeyTree(string keyPath) => throw new PlatformNotSupportedException();
         public void BroadcastSettingChange(string area) => throw new PlatformNotSupportedException();
+    }
+
+    /// <summary>As above, for the taskbar.</summary>
+    sealed class UnavailableTaskbar : ITaskbarController
+    {
+        public bool Exists => throw new PlatformNotSupportedException();
+        public bool IsHidden => throw new PlatformNotSupportedException();
+        public bool AutoHide
+        {
+            get => throw new PlatformNotSupportedException();
+            set => throw new PlatformNotSupportedException();
+        }
+        public int SetVisible(bool visible) => throw new PlatformNotSupportedException();
+        public IReadOnlyList<long> Windows() => throw new PlatformNotSupportedException();
+    }
+
+    /// <summary>As above, for the taskbar keeper.</summary>
+    sealed class UnavailableKeeper : ITaskbarKeeperProcess
+    {
+        public bool IsRunning => throw new PlatformNotSupportedException();
+        public void Start(string exe) => throw new PlatformNotSupportedException();
+        public void Stop() => throw new PlatformNotSupportedException();
     }
 
     /// <summary>As above, for the dark/light mode values.</summary>

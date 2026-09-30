@@ -46,7 +46,7 @@ A tool that needs rights declares it, the Review stage says so and names the pro
 
 ### Windows
 
-All seven categories, twenty-five tools.
+All seven categories, twenty-six tools.
 
 | Category | Tool | |
 |---|---|---|
@@ -62,6 +62,7 @@ All seven categories, twenty-five tools.
 | Explorer & Shell | Classic Right-Click Menu | Windows 11 only: the per-user `InprocServer32` override for the full menu, then an Explorer restart. Run it twice to undo |
 | Explorer & Shell | Show Seconds on the Taskbar Clock | `ShowSecondsInSystemClock`, then a settings broadcast |
 | Explorer & Shell | Show Full Path in Explorer Titles | `CabinetState\FullPath` — on Windows 11 it shows in the taskbar preview and Alt+Tab |
+| Explorer & Shell | Hide the Taskbar | For a desktop run from Hisashi: auto-hide on, the taskbar windows hidden outright, and a small `osXos --hide-taskbar` keeper — started at once and at every sign-in — that hides any new taskbar Explorer makes after a restart, a crash or a monitor being plugged in. Run it twice to undo, auto-hide restored as it was |
 | System | Switch Dark / Light Mode | Flips `AppsUseLightTheme` and `SystemUsesLightTheme` together, then broadcasts `ImmersiveColorSet` so the taskbar and open apps redraw. Run it twice to undo |
 | System | Startup Apps Report | Both `Run` keys and both Startup folders, each marked enabled or disabled the way Task Manager records it — **read-only** |
 | Network | Flush DNS Cache | `ipconfig /flushdns` |
@@ -151,7 +152,7 @@ Each OS defines seven categories — Maintenance, a shell one (Explorer & Shell,
 
 Nine editorial palettes — seven light, two dark — and seven typefaces, switchable live, shared with Cogas.
 
-**Light and dark mode** is one click on every platform: the sun/moon button in the top bar, the Light/Dark switch in Settings, or **View → Dark Mode** in the menu bar. Each mode keeps its own palette, so switching always lands on the one you picked for it. The mode is saved as soon as you switch; palette choices still wait for Save.
+**Light and dark mode** is the Light/Dark switch at the top of Settings. Each mode keeps its own palette, so switching always lands on the one you picked for it, and like everything else on that page it applies live and is kept on Save.
 
 Settings, theme and behaviour live in a plain JSON file you can read and edit:
 
