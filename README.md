@@ -26,6 +26,19 @@ The inspection runs while you read the steps, so Review is there when you get to
 
 When a tool cannot do anything useful here — no cache to clear, a resolver it does not recognise — Review says so plainly and the action is disabled. osXos never reports success for a job it did not do.
 
+Tools that only report — Developer Settings Report, PATH Health Check, Startup Apps Report, Failed Services Report — carry a **Read-only** pill on their card. Running one changes nothing.
+
+## All Tools
+
+**All Tools**, at the top of the sidebar, is every tool on one page: a checklist grouped by category, in the spirit of Chris Titus's WinUtil. Each row shows what that tool would do on this machine right now — the same read-only scan its Review stage runs — so the page is itself the review. Tick what you want and press **Run selected**.
+
+- Scans start the first time you open the page, four at a time, never at launch; **Refresh** looks again.
+- Reports, and tools with nothing to do, cannot be ticked; each says why.
+- Ticking a tool whose run already includes another greys the smaller one out — Remove AI Tool Leftovers includes the other three AI tools, for instance.
+- **Run selected** asks once, listing the tools, how many delete permanently, and which will ask for administrator rights.
+- Tools then run one at a time, each acting on exactly what the page showed for it. Every row shows queued, running, done or failed with the tool's own result, **Stop after this one** ends the batch early, and whatever ran is scanned again so its row shows the machine as it now is.
+- When the batch finishes, a **run report** opens: every tool that ran, whether it succeeded, and everything it said on its own Result stage. **View report** brings it back until the next batch.
+
 ## Menu bar
 
 osXos describes itself as a menu once — an **osXos** menu, **Tools** (every tool, grouped by category, two clicks from anywhere), **View** and **Help** — and then draws it wherever the platform keeps menus:
@@ -40,13 +53,13 @@ osXos describes itself as a menu once — an **osXos** menu, **Tools** (every to
 
 ## Tools
 
-Almost everything here runs inside your own user account — no UAC, no sudo, no polkit. **Exactly two tools need administrator rights**: Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first, and Clean Package Cache on Linux, because the package manager's download cache is owned by root.
+Most of osXos runs inside your own user account — no UAC, no sudo, no polkit. The tools that need administrator rights are Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first; Clean Package Cache on Linux, because the package manager's download cache is owned by root; and the entries taken from WinUtil that change machine-wide settings — registry tweaks with a value in `HKEY_LOCAL_MACHINE`, and every script, feature and fix, since WinUtil runs those as administrator. Each carries an **Admin** pill, and elevates one command whose every part its Review lists.
 
 A tool that needs rights declares it, the Review stage says so and names the prompt the OS is about to show, and osXos elevates **that one command** rather than relaunching itself as administrator — so the window, your settings and every other tool stay at normal rights. The category header tells you which way round it is (`1 of 4 need administrator`). A test pins the exact list of tools allowed to ask, so one cannot gain elevation quietly.
 
 ### Windows
 
-All seven categories, twenty-six tools.
+All seven categories, 131 tools — twenty-six of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
 
 | Category | Tool | |
 |---|---|---|
@@ -76,6 +89,42 @@ All seven categories, twenty-six tools.
 | AI Assistants | Clear AI Tool Caches | Everything above, plus logs, sandbox binaries and the installer packages Claude Desktop keeps after updating |
 | AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
 | AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
+
+### Windows tweaks
+
+Registry tweaks in the WinUtil mould: each sets a handful of values, shows them all on Review with what they are now and what they become, and **running it again puts every value back**. They sit in the category they belong to, carry an **Admin** pill when a value is machine-wide, and are all on the All Tools page for ticking in bulk.
+
+**osXos's own**, all per-user, none needing administrator rights: Turn Off Bing in Start Search, Turn Off Tips, Suggestions & Ads, Turn Off Advertising ID & Tailored Experiences, Turn Off Copilot (Windows, its taskbar button and Edge's sidebar), and Turn Off Recall & Click to Do.
+
+**From [Chris Titus Tech's WinUtil](https://github.com/ChrisTitusTech/winutil)** (MIT licensed) — thirty-four tweaks, value for value as WinUtil publishes them, generated from its `config/tweaks.json` by `scripts/gen-winutil-tweaks.py`:
+
+| Kind | Tweaks |
+|---|---|
+| Privacy | Disable Activity History, Disable Consumer Features, Prevent Device Companion Apps, Debloat Microsoft Edge, Debloat Brave Browser |
+| Network | Disable Delivery Optimization, Set IPv4 as Preferred, Disable RDP Unsigned File Warnings |
+| Explorer & Shell | Enable End Task With Right Click, Enable Start Menu Previous Layout, Disable File Explorer Home and Gallery, Disable System Tray Notifications & Calendar, System Tray Battery Percentage, Scrollbars Always Visible, Window Snapping, Settings Home Page, Logon Screen Acrylic Blur, Disable Lock Screen, Taskbar Search Icon, Taskbar Task View Icon |
+| System | Disable Windows Platform Binary Table (WPBT), Set Time to UTC, Disable Background Apps, BSoD Verbose Mode, Logon Verbose Mode, Microsoft Outlook New Version, Mouse Acceleration, Num Lock on Startup, S0 Sleep Network Connectivity, S3 Sleep, Sticky Keys, Game Mode |
+| Maintenance / Developer | Disable Storage Sense, Enable Long Paths |
+
+Every write goes through `reg import` of a file osXos writes — exactly what double-clicking a `.reg` file does — elevated only when a value is in `HKEY_LOCAL_MACHINE`. Afterwards each value is read back, and the result reports what the registry actually holds.
+
+**WinUtil's scripts, features, fixes and panels** — sixty-six more entries, generated by `scripts/gen-winutil-scripts.py` with WinUtil's PowerShell embedded word for word:
+
+| Kind | Entries |
+|---|---|
+| Script tweaks | Disable Telemetry, Disable Location Tracking, Set Services to Manual, Disable Hibernation, Set Visual Effects to Best Performance, Disable Teredo, Disable IPv6, Start Menu Recommendations, Taskbar Centered Icons, Disable Razer Software Auto-Install — all toggles with a state — plus Disable BitLocker, Disable Reserved Storage, Disable Microsoft Store Recommended Search Results, Disable Logitech Download Assistant Auto-Install and Disable File Explorer Automatic Folder Discovery, each with an **Undo** tool beside it, and the one-off Create Restore Point, Run Disk Cleanup, Remove Temporary Files and Remove Widgets |
+| Features | .NET Framework 2/3/4, Hyper-V, Legacy Media Components, WSL, NFS, Windows Sandbox — each showing whether it is already enabled — plus Registry Backup and Legacy F8 Boot Recovery on/off |
+| Fixes | Reset Windows Update, Reset Network, System Corruption Scan (chkdsk, sfc, DISM), NTP Server (pool.ntp.org), OpenSSH Server |
+| DNS | Google, Cloudflare (three flavours), OpenDNS, Quad9, AdGuard (two flavours), and Reset to Automatic (DHCP) |
+| Windows Update | Default Settings, Security Only (Recommended), Disable |
+| Power | Enable Ultimate Performance Power Plan, Restore Default Power Plans |
+| Legacy panels | Computer Management, Control Panel, Mouse, Network Connections, Power, Printers, Programs and Features, Region, Security and Maintenance, Sound, System Properties, Time and Date, Firewall, System Restore — these open a window and need nothing |
+
+Each runs the way WinUtil runs it — one elevated PowerShell, so one administrator prompt — but inside osXos's contract: Review lists every value, service start type, feature and the complete script before anything happens; the Result stage shows what the script printed; toggles read their state back afterwards and say if it did not land. A few of WinUtil's own helpers (its logger, progress and Explorer refresh) are supplied as small stand-ins so the scripts run unmodified.
+
+**Every tweak shows its current state** as a pill on its card, in search and on All Tools — *Recall off*, *Enabled*, *Partly applied* — and says **Not on this PC** when what it controls does not exist here: Recall off a Copilot+ PC, Brave when Brave is not installed, a Windows feature this edition does not offer.
+
+**Not taken from WinUtil**, deliberately: the entries that download from the internet — Remove Edge, Remove OneDrive, Windows AI removal, the Adobe block list, O&O ShutUp10++, Sysinternals Autologon, the WinGet reinstall and the CTT PowerShell profile — because osXos makes no network requests; DNS's "Fastest" option, which benchmarks by contacting every provider; Multiplane Overlay, a three-way choice rather than a toggle; and WinUtil's app installer and Windows ISO creator, which are applications of their own. Hidden files, file extensions, dark mode and the classic right-click menu already had osXos tools, so WinUtil's versions are not duplicated.
 
 ### macOS
 

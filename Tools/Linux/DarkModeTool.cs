@@ -11,7 +11,7 @@ namespace OsXos.Tools.Linux;
 ///
 /// A two-way toggle, like the other mode switches: running it again goes back.
 /// </summary>
-public sealed class DarkModeTool : ITool
+public sealed class DarkModeTool : ITool, IHasState
 {
     const string Schema = "org.gnome.desktop.interface";
 
@@ -170,6 +170,13 @@ public sealed class DarkModeTool : ITool
     static string Mode(bool dark) => dark ? "dark" : "light";
 
     // ------------------------------------------------------------ inspect / run --
+
+    public async Task<ToolState> ReadStateAsync(CancellationToken ct)
+    {
+        var (plan, blocker) = await MakePlanAsync(ct).ConfigureAwait(false);
+        if (plan is null) return new ToolState("Unknown", StateTone.Unavailable, blocker);
+        return plan.Dark ? new ToolState("Dark", StateTone.On, plan.Desktop) : new ToolState("Light", StateTone.Off, plan.Desktop);
+    }
 
     public async Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

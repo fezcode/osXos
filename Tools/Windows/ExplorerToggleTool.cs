@@ -26,7 +26,7 @@ public sealed record ExplorerToggle(
 /// it — which is running it again. A value that was never written counts as off,
 /// which is Windows' own default for both of the toggles built from this.
 /// </summary>
-public sealed class ExplorerToggleTool : ITool
+public sealed class ExplorerToggleTool : ITool, IHasState
 {
     readonly ExplorerToggle _toggle;
     readonly IUserRegistry _registry;
@@ -48,6 +48,9 @@ public sealed class ExplorerToggleTool : ITool
     public IReadOnlyList<ToolStep> Steps => _toggle.Steps;
 
     bool On => _registry.GetDword(_toggle.KeyPath, _toggle.ValueName) is { } v && v != 0;
+
+    public Task<ToolState> ReadStateAsync(CancellationToken ct) =>
+        Task.FromResult(On ? new ToolState("On", StateTone.On) : new ToolState("Off", StateTone.Off));
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

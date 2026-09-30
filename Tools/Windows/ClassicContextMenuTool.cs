@@ -8,7 +8,7 @@ namespace OsXos.Tools.Windows;
 /// one CLSID in HKEY_CURRENT_USER makes Explorer fail to load the new menu's handler
 /// and fall back to the classic one. Deleting the key undoes it completely.
 /// </summary>
-public sealed class ClassicContextMenuTool : ITool
+public sealed class ClassicContextMenuTool : ITool, IHasState
 {
     public const string ClsidKey = @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}";
     public const string ServerKey = ClsidKey + @"\InprocServer32";
@@ -52,6 +52,11 @@ public sealed class ClassicContextMenuTool : ITool
     };
 
     bool ClassicOn => _registry.KeyExists(ServerKey);
+
+    public Task<ToolState> ReadStateAsync(CancellationToken ct) => Task.FromResult(
+        _build() < Windows11Build
+            ? new ToolState("Not on this PC", StateTone.Unavailable, "Windows 10 already uses the classic menu.")
+            : ClassicOn ? new ToolState("Classic", StateTone.On) : new ToolState("Windows 11", StateTone.Off));
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

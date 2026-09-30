@@ -83,7 +83,7 @@ public sealed class RegistryWindowsAppearance : IWindowsAppearance
 /// taskbar together. A two-way toggle: the preview names the mode now and the mode
 /// it will move to, and running it again puts everything back.
 /// </summary>
-public sealed class DarkModeTool : ITool
+public sealed class DarkModeTool : ITool, IHasState
 {
     readonly IWindowsAppearance _appearance;
 
@@ -114,6 +114,15 @@ public sealed class DarkModeTool : ITool
     static bool IsDark(int apps, int system) => apps == 0 && system == 0;
 
     static string Mode(int value) => value == 0 ? "dark" : "light";
+
+    public Task<ToolState> ReadStateAsync(CancellationToken ct)
+    {
+        var apps = _appearance.AppsUseLightTheme;
+        var system = _appearance.SystemUsesLightTheme;
+        return Task.FromResult(apps == system
+            ? new ToolState(apps == 0 ? "Dark" : "Light", apps == 0 ? StateTone.On : StateTone.Off)
+            : new ToolState("Custom", StateTone.Partial, $"Apps are {Mode(apps)}, the taskbar is {Mode(system)}."));
+    }
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

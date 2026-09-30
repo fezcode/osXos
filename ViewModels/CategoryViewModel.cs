@@ -20,6 +20,11 @@ public sealed class ToolCardViewModel : ViewModelBase
     public string Name => Tool.Name;
     public string Summary => Tool.Summary;
     public bool IsDestructive => Tool.IsDestructive;
+    public bool IsReadOnly => Tool.IsReadOnly;
+
+    /// <summary>The setting's current state, for tools that have one. Filled in when the page opens.</summary>
+    public StateBadge State { get; } = new();
+
     public int StepCount => Tool.Steps.Count;
     public string StepCountText => $"{Tool.Steps.Count} steps";
     public ReactiveCommand<Unit, Unit> OpenCommand { get; }
@@ -60,6 +65,25 @@ public sealed class CategoryViewModel : ViewModelBase
     public string CountText { get; }
     public bool NeedsElevation { get; }
     public string ElevationText { get; }
+
+    bool _statesLoaded;
+
+    /// <summary>
+    /// Reads every card's state once, when the page is first shown, and again after a
+    /// tool window closes (see <see cref="RefreshStates"/>). Cheap by contract: only
+    /// tools implementing <see cref="IHasState"/> are asked.
+    /// </summary>
+    public void EnsureStates()
+    {
+        if (_statesLoaded) return;
+        RefreshStates();
+    }
+
+    public void RefreshStates()
+    {
+        _statesLoaded = true;
+        foreach (var card in Cards) _ = card.State.LoadAsync(card.Tool);
+    }
 }
 
 /// <summary>
@@ -110,5 +134,6 @@ public sealed class SearchViewModel : ViewModelBase
     {
         Query = query;
         Cards = _registry.Search(query).Select(t => new ToolCardViewModel(t, _open)).ToList();
+        foreach (var card in Cards) _ = card.State.LoadAsync(card.Tool);
     }
 }

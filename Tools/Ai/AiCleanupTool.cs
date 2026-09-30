@@ -97,6 +97,19 @@ public sealed class AiCleanupTool : ITool
 
     public bool IsDestructive => true;
 
+    /// <summary>
+    /// Each wider job includes the narrower ones whole: Caches takes everything Temp
+    /// does, and the wipe takes everything.
+    /// </summary>
+    public IReadOnlyCollection<string> Covers => Job switch
+    {
+        AiJob.Caches => new[] { IdFor(AiJob.Temp) },
+        AiJob.Everything => new[] { IdFor(AiJob.Temp), IdFor(AiJob.Caches), IdFor(AiJob.History) },
+        _ => Array.Empty<string>(),
+    };
+
+    string IdFor(AiJob job) => new AiCleanupTool(Platform, job, _paths).Id;
+
     public string? Warning => Job switch
     {
         AiJob.Temp =>

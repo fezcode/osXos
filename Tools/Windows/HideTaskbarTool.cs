@@ -10,7 +10,7 @@ namespace OsXos.Tools.Windows;
 ///
 /// Running it again undoes all three and puts auto-hide back the way it was.
 /// </summary>
-public sealed class HideTaskbarTool : ITool
+public sealed class HideTaskbarTool : ITool, IHasState
 {
     public const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     public const string RunValue = "osXos Hide Taskbar";
@@ -70,6 +70,12 @@ public sealed class HideTaskbarTool : ITool
 
     /// <summary>On means osXos is keeping the taskbar hidden: the entry is there and the taskbar is hidden.</summary>
     bool HiddenByOsXos => SignInEntryPresent && _taskbar.IsHidden;
+
+    public Task<ToolState> ReadStateAsync(CancellationToken ct) => Task.FromResult(
+        !_taskbar.Exists ? new ToolState("Not running", StateTone.Unavailable, "Explorer's taskbar is not running.")
+        : HiddenByOsXos ? new ToolState("Hidden", StateTone.On, _keeper.IsRunning ? "Kept hidden by osXos." : "Hidden, but the keeper is not running.")
+        : SignInEntryPresent ? new ToolState("Showing again", StateTone.Partial, "Set to hide, but the taskbar is showing.")
+        : new ToolState("Shown", StateTone.Off));
 
     public static string SignInCommand(string exe) => $"\"{exe}\" {TaskbarKeeper.Argument}";
 

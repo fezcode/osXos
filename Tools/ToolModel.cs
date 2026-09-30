@@ -37,6 +37,39 @@ public sealed record ToolStep(string Title, string Detail);
 /// </summary>
 public sealed record PreviewItem(string Label, string? Detail = null, long? Bytes = null);
 
+/// <summary>How a tool's current state should read at a glance: which colour its pill takes.</summary>
+public enum StateTone
+{
+    /// <summary>The thing the tool controls is on, or the tool's change is in place.</summary>
+    On,
+
+    /// <summary>Off, or the change is not in place.</summary>
+    Off,
+
+    /// <summary>Some of the change is in place and some is not.</summary>
+    Partial,
+
+    /// <summary>What the tool controls does not exist on this machine.</summary>
+    Unavailable,
+}
+
+/// <summary>
+/// What a toggle-shaped tool's setting is right now, in a couple of words —
+/// "Recall off", "Enabled", "Not on this PC" — with the longer story in
+/// <paramref name="Detail"/> for a tooltip.
+/// </summary>
+public sealed record ToolState(string Label, StateTone Tone, string? Detail = null);
+
+/// <summary>
+/// A tool that can say what its setting is right now, cheaply: a few registry reads
+/// or one quick command, never a folder walk. Category pages ask every tool that
+/// implements this when they open, so the answer has to be fast and read-only.
+/// </summary>
+public interface IHasState
+{
+    Task<ToolState> ReadStateAsync(CancellationToken ct);
+}
+
 /// <summary>
 /// The read-only result of <see cref="ITool.InspectAsync"/> — everything the Review
 /// stage shows before anything is touched.
@@ -52,6 +85,9 @@ public sealed record ToolPreview(
     /// user is the shape of this: the tool is ordinary, today's work is not.
     /// </summary>
     public bool NeedsElevation { get; init; }
+
+    /// <summary>The tool's current state, for tools that know one. Shown as a pill beside the summary.</summary>
+    public ToolState? State { get; init; }
 
     /// <summary>
     /// False when the tool cannot proceed on this machine — systemd-resolved absent,
@@ -120,6 +156,19 @@ public interface ITool
     /// have to write down.
     /// </summary>
     bool RequiresElevation => false;
+
+    /// <summary>
+    /// Whether this tool only reports. A report's Run changes nothing, so the UI
+    /// marks it with a pill and the All Tools page does not offer it for a batch.
+    /// </summary>
+    bool IsReadOnly => false;
+
+    /// <summary>
+    /// Ids of tools whose whole job this one's run already includes. Selecting this
+    /// tool on the All Tools page deselects those, since running them afterwards
+    /// would find nothing left and report that as a failure.
+    /// </summary>
+    IReadOnlyCollection<string> Covers => Array.Empty<string>();
 
     /// <summary>The Explain stage, in order.</summary>
     IReadOnlyList<ToolStep> Steps { get; }

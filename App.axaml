@@ -712,6 +712,56 @@
         <Style Selector="Button.CardHit:pressed Border.card">
             <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
         </Style>
+        <!-- A small labelled tag beside a tool's name or on its card: read-only,
+             needs administrator. Quiet by default; the read-only one takes the cyan
+             ink so "this changes nothing" reads at a glance. -->
+        <Style Selector="Border.pill">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="7,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.pill > TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+        </Style>
+        <Style Selector="Border.pill.readonly">
+            <Setter Property="Background" Value="{DynamicResource CyanMuted}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Cyan}"/>
+        </Style>
+        <Style Selector="Border.pill.readonly > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+        </Style>
+        <!-- State pills: what a toggle's setting is right now. On takes the cyan
+             highlight, Off stays quiet, Partly takes gold, and Not on this PC fades. -->
+        <Style Selector="Border.pill.on">
+            <Setter Property="Background" Value="{DynamicResource CyanMuted}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Cyan}"/>
+        </Style>
+        <Style Selector="Border.pill.on > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+        </Style>
+        <Style Selector="Border.pill.partial">
+            <Setter Property="Background" Value="{DynamicResource GoldMuted}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Gold}"/>
+        </Style>
+        <Style Selector="Border.pill.partial > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Gold}"/>
+        </Style>
+        <Style Selector="Border.pill.unavailable">
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+        <Style Selector="Border.pill.unavailable > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
+            <Setter Property="FontStyle" Value="Italic"/>
+        </Style>
+        <Style Selector="Border.pill.admin > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Gold}"/>
+        </Style>
+
         <Style Selector="Border.heroCard">
             <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource LineBright}"/>

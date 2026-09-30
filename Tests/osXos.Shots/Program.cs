@@ -54,6 +54,47 @@ static class Program
 
         ThemeManager.ApplyTheme(ThemeCatalog.FindTheme("default"));
 
+        // All Tools, after a real (read-only) scan of this machine, with a few ticked.
+        var allVm = new MainWindowViewModel(services);
+        allVm.SelectedNav = allVm.NavItems.First(n => n.Vm is AllToolsViewModel);
+        var scan = allVm.AllTools.RefreshAsync();
+        while (!scan.IsCompleted) Pump();
+        foreach (var item in allVm.AllTools.Items.Where(i => i.IsSelectable).Take(3)) item.IsChecked = true;
+        Shoot("all-tools", new MainWindow { DataContext = allVm }, 1180, 900);
+        allVm.AllTools.ReviewCommand.Execute().Subscribe(_ => { });
+        Shoot("all-tools-confirm", new MainWindow { DataContext = allVm }, 1180, 900);
+
+        // The run report, from stand-in tools: a real batch would change this machine.
+        var reportVm = new MainWindowViewModel(services);
+        var stubs = new ITool[]
+        {
+            new ReportStub("stub.temp", "Empty Temp Folder", "IconTrash", ToolResult.Success(
+                "720.1 MB reclaimed from 647 items",
+                "Removed 631 of 647 items, reclaiming 720.1 MB.",
+                "16 left in place — held open by a running program.")),
+            new ReportStub("stub.shader", "Clear Shader Caches", "IconImage", ToolResult.Success(
+                "22.1 MB reclaimed from 3 locations",
+                "Removed 1,204 items across 3 locations, reclaiming 22.1 MB.",
+                "Shaders are compiled again the first time something needs them.")),
+            new ReportStub("stub.update", "Clear Windows Update Cache", "IconDownload", ToolResult.Failure(
+                "Cancelled", "Administrator rights were declined, so nothing was changed.")),
+            new ReportStub("stub.menu", "Classic Right-Click Menu", "IconViewList", ToolResult.Success(
+                "The classic right-click menu is on",
+                "Right-clicking now shows the full menu straight away.",
+                "Explorer was restarted.")),
+        };
+        var stubPage = new AllToolsViewModel(new ToolRegistry(OSKind.Windows, stubs), OSKind.Windows);
+        var stubScan = stubPage.RefreshAsync();
+        while (!stubScan.IsCompleted) Pump();
+        foreach (var item in stubPage.Items) item.IsChecked = true;
+        var stubRun = stubPage.RunSelectedAsync();
+        while (!stubRun.IsCompleted) Pump();
+        Shoot("all-tools-report", new Window
+        {
+            Content = new AllToolsView { DataContext = stubPage },
+            Background = Avalonia.Media.Brushes.Transparent,
+        }, 1000, 760);
+
         // Every category page, so a new tool's card is seen in place.
         var catVm = new MainWindowViewModel(services);
         foreach (var nav in catVm.NavItems.Where(n => n.Vm is CategoryViewModel).ToList())
@@ -271,6 +312,36 @@ static class Program
     }
 
     /// <summary>Stands in for a tool whose preview blocks, to shoot that state.</summary>
+    /// <summary>A tool that scans instantly and returns a fixed result, for the report shot.</summary>
+    sealed class ReportStub : ITool
+    {
+        readonly ToolResult _result;
+
+        public ReportStub(string id, string name, string icon, ToolResult result)
+        {
+            Id = id;
+            Name = name;
+            IconKey = icon;
+            _result = result;
+        }
+
+        public string Id { get; }
+        public OSKind Platform => OSKind.Windows;
+        public ToolCategory Category => ToolCategory.Maintenance;
+        public string Name { get; }
+        public string Summary => "";
+        public string IconKey { get; }
+        public string? Warning => null;
+        public bool IsDestructive => true;
+        public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[] { new("a", "b") };
+
+        public Task<ToolPreview> InspectAsync(CancellationToken ct) =>
+            Task.FromResult(new ToolPreview(new[] { new PreviewItem("x", "y", 1024) }, "Ready."));
+
+        public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null) =>
+            Task.FromResult(_result);
+    }
+
     sealed class BlockedStub : ITool
     {
         public string Id => "stub.blocked";

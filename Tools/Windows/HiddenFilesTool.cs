@@ -75,7 +75,7 @@ public sealed class RegistryExplorerSettings : IExplorerAdvancedSettings
 /// two-way toggle: the preview names the current state and the state it will move to,
 /// and running it again puts everything back.
 /// </summary>
-public sealed class HiddenFilesTool : ITool
+public sealed class HiddenFilesTool : ITool, IHasState
 {
     readonly IExplorerAdvancedSettings _settings;
 
@@ -101,6 +101,16 @@ public sealed class HiddenFilesTool : ITool
         new("Only your account is affected",
             "These are per-user values under HKEY_CURRENT_USER. No administrator rights are needed, no other account on this PC sees any difference, and no file is created, moved or deleted."),
     };
+
+    public Task<ToolState> ReadStateAsync(CancellationToken ct)
+    {
+        var hidden = _settings.Hidden == 1;
+        var ext = _settings.HideFileExt == 0;
+        return Task.FromResult(hidden && ext ? new ToolState("Shown", StateTone.On)
+            : !hidden && !ext ? new ToolState("Hidden", StateTone.Off)
+            : new ToolState("Partly shown", StateTone.Partial,
+                $"Hidden files are {(hidden ? "shown" : "hidden")}, extensions are {(ext ? "shown" : "hidden")}."));
+    }
 
     public Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

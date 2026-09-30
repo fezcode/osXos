@@ -7,6 +7,9 @@ public enum RegHive
 {
     CurrentUser,
     LocalMachine,
+
+    /// <summary>HKEY_USERS — only for <c>.DEFAULT</c>, the profile the sign-in screen uses.</summary>
+    Users,
 }
 
 /// <summary>
@@ -36,8 +39,12 @@ public interface IRegistryAccess
 [SupportedOSPlatform("windows")]
 public sealed class WindowsRegistryAccess : IRegistryAccess
 {
-    static RegistryKey Root(RegHive hive) =>
-        hive == RegHive.LocalMachine ? Registry.LocalMachine : Registry.CurrentUser;
+    static RegistryKey Root(RegHive hive) => hive switch
+    {
+        RegHive.LocalMachine => Registry.LocalMachine,
+        RegHive.Users => Registry.Users,
+        _ => Registry.CurrentUser,
+    };
 
     public object? GetValue(RegHive hive, string keyPath, string name)
     {

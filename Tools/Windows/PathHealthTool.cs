@@ -26,6 +26,9 @@ public sealed class PathHealthTool : ITool
     public string? Warning => null;
     public bool IsDestructive => false;
 
+    /// <summary>A report: reads, and changes nothing.</summary>
+    public bool IsReadOnly => true;
+
     public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[]
     {
         new("Split PATH into its entries",

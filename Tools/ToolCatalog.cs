@@ -66,6 +66,9 @@ public static class ToolCatalog
             new RecentItemsTool(),
             new ExplorerHistoryTool(registry),
             new LocationCleanupTool(BrowserCaches.For(OSKind.Windows)),
+            Tweak(OsXosTweaks.BingSearch),
+            Tweak(OsXosTweaks.TipsAndAds),
+            Tweak(OsXosTweaks.AdvertisingId),
 
             // Developer
             new DeveloperStatusTool(registry),
@@ -77,7 +80,20 @@ public static class ToolCatalog
             new AiCleanupTool(OSKind.Windows, AiJob.Caches),
             new AiCleanupTool(OSKind.Windows, AiJob.History),
             new AiCleanupTool(OSKind.Windows, AiJob.Everything),
-        };
+            Tweak(OsXosTweaks.Copilot),
+            Tweak(OsXosTweaks.Recall),
+        }
+        // WinUtil's registry tweaks, each placed in the category it belongs to and
+        // ordered after that category's own tools by the sort below.
+        .Concat(WinUtilTweaks.All.Select(Tweak))
+        .Concat(WinUtilScripts.All.Select(Script))
+        .OrderBy(t => CategoryOrder(OSKind.Windows, t.Category))
+        .ToArray();
+
+        ITool Script(WinUtilScript entry) => new WinUtilScriptTool(entry, registry, runner, elevation);
+
+        ITool Tweak(RegistryTweak tweak) =>
+            new RegistryTweakTool(tweak, registry, userRegistry, shell, runner, elevation);
     }
 
     public static IReadOnlyList<ITool> MacOS(IProcessRunner runner) =>
@@ -151,6 +167,15 @@ public static class ToolCatalog
             new AiCleanupTool(OSKind.Linux, AiJob.History),
             new AiCleanupTool(OSKind.Linux, AiJob.Everything),
         };
+
+    /// <summary>Where a category sits in an OS's taxonomy, for keeping the catalogue grouped.</summary>
+    static int CategoryOrder(OSKind os, ToolCategory category)
+    {
+        var list = CategoryCatalog.For(os);
+        for (var i = 0; i < list.Count; i++)
+            if (list[i].Category == category) return i;
+        return list.Count;
+    }
 
     /// <summary>
     /// The tools for one OS, wired to whatever the caller supplies. The Windows set

@@ -4,7 +4,7 @@ namespace OsXos.Tools.MacOS;
 /// Shows or hides dotfiles in Finder, via the same defaults key the command line
 /// uses. A two-way toggle: running it again puts Finder back.
 /// </summary>
-public sealed class FinderHiddenFilesTool : ITool
+public sealed class FinderHiddenFilesTool : ITool, IHasState
 {
     public static readonly ShellCommand ReadCommand =
         new("defaults", "read", "com.apple.finder", "AppleShowAllFiles");
@@ -38,6 +38,12 @@ public sealed class FinderHiddenFilesTool : ITool
         new("Nothing is created or deleted",
             "Hidden files were always there; this only changes whether Finder draws them. Run the tool again to switch back. Cmd+Shift+. does the same thing in a Finder window if you would rather not use a tool at all."),
     };
+
+    public async Task<ToolState> ReadStateAsync(CancellationToken ct)
+    {
+        var read = await _runner.RunAsync(ReadCommand, ct).ConfigureAwait(false);
+        return read.Ok && ParseShowing(read.StdOut) ? new ToolState("Shown", StateTone.On) : new ToolState("Hidden", StateTone.Off);
+    }
 
     public async Task<ToolPreview> InspectAsync(CancellationToken ct)
     {

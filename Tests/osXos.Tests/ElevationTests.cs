@@ -27,8 +27,32 @@ public class ElevationTests
             .Concat(ToolCatalog.Linux(runner))
             .ToList();
 
-        var elevated = all.Where(t => t.RequiresElevation).Select(t => t.Id).OrderBy(x => x).ToList();
-        Assert.Equal(MayElevate.OrderBy(x => x), elevated);
+        // osXos's own tools: exactly the list. WinUtil's entries run as administrator
+        // because WinUtil does — each is marked as WinUtil's and says so on Review —
+        // and a registry tweak only when one of its values is machine-wide.
+        var own = all.Where(t => t.RequiresElevation && !FromWinUtil(t)).Select(t => t.Id).OrderBy(x => x).ToList();
+        Assert.Equal(MayElevate.OrderBy(x => x), own);
+
+        Assert.All(all.OfType<RegistryTweakTool>(), t =>
+            Assert.Equal(t.Tweak.MachineWide, ((ITool)t).RequiresElevation));
+        Assert.All(all.OfType<WinUtilScriptTool>(), t =>
+            Assert.Equal(t.Entry.Kind != ScriptKind.Launcher, ((ITool)t).RequiresElevation));
+    }
+
+    static bool FromWinUtil(ITool tool) => tool switch
+    {
+        RegistryTweakTool t => t.Tweak.Source is not null,
+        WinUtilScriptTool t => t.Entry.Source is not null,
+        _ => false,
+    };
+
+    [Fact]
+    public void Every_elevated_winutil_entry_says_it_needs_administrator_on_review()
+    {
+        var elevated = TestCatalog.Windows().Where(t => t.RequiresElevation && FromWinUtil(t)).ToList();
+        Assert.NotEmpty(elevated);
+        Assert.All(elevated, t => Assert.Contains(t.Steps, s =>
+            s.Detail.Contains("administrator", StringComparison.OrdinalIgnoreCase)));
     }
 
     [Fact]

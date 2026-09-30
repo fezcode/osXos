@@ -58,6 +58,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public SettingsViewModel Settings { get; }
     public SearchViewModel Search { get; }
+    public AllToolsViewModel AllTools { get; }
     public List<NavItem> NavItems { get; }
     public List<OsBadgeViewModel> OsBadges { get; }
 
@@ -70,6 +71,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
         Settings = new SettingsViewModel(services);
         Search = new SearchViewModel(services.Tools, OpenToolAsync);
+        AllTools = new AllToolsViewModel(services.Tools, services.OS);
 
         OsName = CategoryCatalog.DisplayName(services.OS);
         OsIcon = Icons.Get(CategoryCatalog.IconKey(services.OS));
@@ -90,6 +92,16 @@ public sealed class MainWindowViewModel : ViewModelBase
             })
             .ToList();
 
+        // Every tool on one page, above the categories. Not the landing page: its
+        // scans measure tens of gigabytes, and should only start when asked for.
+        NavItems.Insert(0, new NavItem
+        {
+            Icon = Icons.Get("IconViewGrid"),
+            Name = "All Tools",
+            CountText = services.Tools.Tools.Count.ToString("0"),
+            Vm = AllTools,
+        });
+
         NavItems.Add(new NavItem
         {
             Icon = Icons.Get("IconSettings"),
@@ -101,8 +113,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             .Select(os => new OsBadgeViewModel(os, os == services.OS))
             .ToList();
 
-        _selectedNav = NavItems[0];
-        _current = NavItems[0].Vm;
+        _selectedNav = NavItems[1];
+        _current = NavItems[1].Vm;
 
         var version = typeof(MainWindowViewModel).Assembly.GetName().Version;
         VersionText = $"v{version?.ToString(3) ?? "dev"}";
@@ -183,6 +195,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     {
         Query = "";
         Current = vm;
+        if (vm is AllToolsViewModel all) all.EnsureInspected();
+        if (vm is CategoryViewModel category) category.EnsureStates();
     }
 
     ViewModelBase _current;
@@ -209,7 +223,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                if (Current == Search) Current = SelectedNav?.Vm ?? NavItems[0].Vm;
+                if (Current == Search) Current = SelectedNav?.Vm ?? NavItems[1].Vm;
             }
             else
             {
@@ -265,6 +279,10 @@ public sealed class MainWindowViewModel : ViewModelBase
         var vm = new ToolWindowViewModel(
             tool, _services.OS, _services.Settings.AlwaysExplain, _services.Elevation);
         await show(tool, vm);
+
+        // The tool may have changed its own state; the page showing it should say so.
+        if (tool is IHasState && Current is CategoryViewModel category) category.RefreshStates();
+        if (tool is IHasState && Current == Search) Search.Apply(Query);
     }
 
     /// <summary>Navigates to Settings, honouring nothing special — the nav guard only

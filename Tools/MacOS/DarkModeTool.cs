@@ -5,7 +5,7 @@ namespace OsXos.Tools.MacOS;
 /// scripting face of the Appearance switch in System Settings, so the whole system
 /// changes at once exactly as if you had clicked it there. A two-way toggle.
 /// </summary>
-public sealed class DarkModeTool : ITool
+public sealed class DarkModeTool : ITool, IHasState
 {
     /// <summary>Prints "Dark" in dark mode; in light mode the key is absent and it exits non-zero.</summary>
     public static readonly ShellCommand ReadCommand =
@@ -66,6 +66,10 @@ public sealed class DarkModeTool : ITool
     }
 
     static string Mode(bool dark) => dark ? "dark" : "light";
+
+    public async Task<ToolState> ReadStateAsync(CancellationToken ct) =>
+        ParseDark(await _runner.RunAsync(ReadCommand, ct).ConfigureAwait(false))
+            ? new ToolState("Dark", StateTone.On) : new ToolState("Light", StateTone.Off);
 
     public async Task<ToolResult> RunAsync(
         ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null)

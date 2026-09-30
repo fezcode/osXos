@@ -42,6 +42,9 @@ public sealed class StartupAppsTool : ITool
     public string? Warning => null;
     public bool IsDestructive => false;
 
+    /// <summary>A report: reads, and changes nothing.</summary>
+    public bool IsReadOnly => true;
+
     public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[]
     {
         new("Read the Run keys",

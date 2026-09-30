@@ -177,7 +177,7 @@ public sealed class RestartDockTool : ITool
 /// Shows or hides Finder's path bar and status bar together. The path bar is where
 /// you are; the status bar is how many items and how much space is free.
 /// </summary>
-public sealed class FinderBarsTool : ITool
+public sealed class FinderBarsTool : ITool, IHasState
 {
     public static ShellCommand Read(string key) => new("defaults", "read", "com.apple.finder", key);
 
@@ -208,6 +208,9 @@ public sealed class FinderBarsTool : ITool
         new("Restart Finder",
             "killall Finder, so it redraws with the new setting. Open Finder windows close with it."),
     };
+
+    public async Task<ToolState> ReadStateAsync(CancellationToken ct) =>
+        await BothOn(ct).ConfigureAwait(false) ? new ToolState("Shown", StateTone.On) : new ToolState("Hidden", StateTone.Off);
 
     async Task<bool> BothOn(CancellationToken ct) =>
         FinderHiddenFilesTool.ParseShowing((await _runner.RunAsync(Read("ShowPathbar"), ct).ConfigureAwait(false)).StdOut) &&
@@ -253,7 +256,7 @@ public sealed class FinderBarsTool : ITool
 /// Moves where screenshots are saved between the Desktop — macOS's default — and a
 /// Screenshots folder in Pictures, so a week of screen grabs stops burying the desktop.
 /// </summary>
-public sealed class ScreenshotFolderTool : ITool
+public sealed class ScreenshotFolderTool : ITool, IHasState
 {
     public static readonly ShellCommand ReadCommand = new("defaults", "read", "com.apple.screencapture", "location");
     public static ShellCommand WriteCommand(string path) => new("defaults", "write", "com.apple.screencapture", "location", path);
@@ -294,6 +297,11 @@ public sealed class ScreenshotFolderTool : ITool
         new("Existing screenshots stay put",
             "Nothing is moved or deleted — only where new ones are saved changes. Run the tool again to switch back."),
     };
+
+    public async Task<ToolState> ReadStateAsync(CancellationToken ct) =>
+        IsFolder(await Current(ct).ConfigureAwait(false))
+            ? new ToolState("Pictures", StateTone.On, Folder)
+            : new ToolState("Desktop", StateTone.Off);
 
     async Task<string?> Current(CancellationToken ct)
     {
