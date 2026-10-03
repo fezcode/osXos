@@ -208,6 +208,14 @@ public sealed class FakeRegistry : IRegistryAccess
     public IReadOnlyList<string> ValueNames(RegHive hive, string keyPath) =>
         _values.TryGetValue(K(hive, keyPath), out var bag) ? bag.Keys.ToList() : Array.Empty<string>();
 
+    /// <summary>A key exists if it was written to, or if any key beneath it was.</summary>
+    public bool KeyExists(RegHive hive, string keyPath)
+    {
+        var k = K(hive, keyPath);
+        return _values.Keys.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)
+                                  || x.StartsWith(k + "\\", StringComparison.OrdinalIgnoreCase));
+    }
+
     public IReadOnlyList<string> SubKeyNames(RegHive hive, string keyPath)
     {
         var prefix = K(hive, keyPath) + "\\";

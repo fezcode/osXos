@@ -25,6 +25,9 @@ public interface IRegistryAccess
 {
     object? GetValue(RegHive hive, string keyPath, string name);
 
+    /// <summary>Whether the key exists, values or not.</summary>
+    bool KeyExists(RegHive hive, string keyPath);
+
     /// <summary>Value names under a key, empty when the key does not exist.</summary>
     IReadOnlyList<string> ValueNames(RegHive hive, string keyPath);
 
@@ -56,6 +59,19 @@ public sealed class WindowsRegistryAccess : IRegistryAccess
         catch
         {
             return null;
+        }
+    }
+
+    public bool KeyExists(RegHive hive, string keyPath)
+    {
+        try
+        {
+            using var key = Root(hive).OpenSubKey(keyPath);
+            return key != null;
+        }
+        catch
+        {
+            return false;
         }
     }
 

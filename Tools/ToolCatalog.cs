@@ -54,6 +54,7 @@ public static class ToolCatalog
             new ExplorerToggleTool(ExplorerToggleTool.ClockSeconds, userRegistry),
             new ExplorerToggleTool(ExplorerToggleTool.FullPathTitle, userRegistry),
             new HideTaskbarTool(taskbar, userRegistry, keeper),
+            new DeadAssociationsTool(registry, userRegistry, explorer.NotifyShell),
 
             // System
             new Tools.Windows.DarkModeTool(appearance),
@@ -303,6 +304,8 @@ public static class ToolCatalog
         public IReadOnlyList<string> ValueNames(RegHive hive, string keyPath) =>
             throw new PlatformNotSupportedException();
         public IReadOnlyList<string> SubKeyNames(RegHive hive, string keyPath) =>
+            throw new PlatformNotSupportedException();
+        public bool KeyExists(RegHive hive, string keyPath) =>
             throw new PlatformNotSupportedException();
         public bool DeleteValue(RegHive hive, string keyPath, string name) =>
             throw new PlatformNotSupportedException();

@@ -59,7 +59,7 @@ A tool that needs rights declares it, the Review stage says so and names the pro
 
 ### Windows
 
-All seven categories, 131 tools — twenty-six of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
+All seven categories, 132 tools — twenty-seven of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
 
 | Category | Tool | |
 |---|---|---|
@@ -72,6 +72,7 @@ All seven categories, 131 tools — twenty-six of osXos's own, five tweaks of it
 | Explorer & Shell | Show Hidden Files & Extensions | Flips `Hidden` and `HideFileExt`, then broadcasts `SHChangeNotify`. Run it twice to undo |
 | Explorer & Shell | Restart Explorer | The shell on its own, for a stuck taskbar or tray. Deletes nothing |
 | Explorer & Shell | Rebuild Open With Lists | Clears the `FileExts` cache so Explorer stops offering uninstalled programs. Leaves `HKEY_CLASSES_ROOT` alone |
+| Explorer & Shell | Remove Dead App Associations | Takes only the leftovers of programs that are gone — Open with entries, remembered and offered file types, a default that points at a dead app, your own dead registrations and link handlers — and keeps every working choice. Never an app on a disconnected drive, an installed Store app, or anything machine-wide |
 | Explorer & Shell | Classic Right-Click Menu | Windows 11 only: the per-user `InprocServer32` override for the full menu, then an Explorer restart. Run it twice to undo |
 | Explorer & Shell | Show Seconds on the Taskbar Clock | `ShowSecondsInSystemClock`, then a settings broadcast |
 | Explorer & Shell | Show Full Path in Explorer Titles | `CabinetState\FullPath` — on Windows 11 it shows in the taskbar preview and Alt+Tab |
