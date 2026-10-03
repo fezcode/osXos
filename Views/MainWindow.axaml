@@ -345,7 +345,7 @@
                 <StackPanel Spacing="6">
                   <TextBlock Text="ELEVATION" Classes="eyebrow"/>
                   <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
-                             Text="Most tools work entirely within your own user account — no UAC prompt, no sudo, no polkit. The ones that cannot — Clear Windows Update Cache, Clean Package Cache on Linux, and the machine-wide WinUtil tweaks — say so on their Review stage, and osXos elevates that one command rather than running itself as administrator."/>
+                             Text="Most tools work entirely within your own user account — no UAC prompt, no sudo, no polkit. The ones that cannot — Clear Windows Update Cache, Clean Package Cache on Linux, Remove AI Sandbox Accounts, and the machine-wide WinUtil tweaks — say so on their Review stage, and osXos elevates that one command rather than running itself as administrator."/>
                 </StackPanel>
               </Border>
 

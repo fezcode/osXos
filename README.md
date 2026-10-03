@@ -53,13 +53,13 @@ osXos describes itself as a menu once — an **osXos** menu, **Tools** (every to
 
 ## Tools
 
-Most of osXos runs inside your own user account — no UAC, no sudo, no polkit. The tools that need administrator rights are Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first; Clean Package Cache on Linux, because the package manager's download cache is owned by root; and the entries taken from WinUtil that change machine-wide settings — registry tweaks with a value in `HKEY_LOCAL_MACHINE`, and every script, feature and fix, since WinUtil runs those as administrator. Each carries an **Admin** pill, and elevates one command whose every part its Review lists.
+Most of osXos runs inside your own user account — no UAC, no sudo, no polkit. The tools that need administrator rights are Clear Windows Update Cache, because the folder is owned by the system and the service holding it has to be stopped first; Clean Package Cache on Linux, because the package manager's download cache is owned by root; Remove AI Sandbox Accounts, because deleting a Windows account always does; and the entries taken from WinUtil that change machine-wide settings — registry tweaks with a value in `HKEY_LOCAL_MACHINE`, and every script, feature and fix, since WinUtil runs those as administrator. Each carries an **Admin** pill, and elevates one command whose every part its Review lists.
 
 A tool that needs rights declares it, the Review stage says so and names the prompt the OS is about to show, and osXos elevates **that one command** rather than relaunching itself as administrator — so the window, your settings and every other tool stay at normal rights. The category header tells you which way round it is (`1 of 4 need administrator`). A test pins the exact list of tools allowed to ask, so one cannot gain elevation quietly.
 
 ### Windows
 
-All seven categories, 132 tools — twenty-seven of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
+All seven categories, 133 tools — twenty-eight of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
 
 | Category | Tool | |
 |---|---|---|
@@ -90,6 +90,7 @@ All seven categories, 132 tools — twenty-seven of osXos's own, five tweaks of 
 | AI Assistants | Clear AI Tool Caches | Everything above, plus logs, sandbox binaries and the installer packages Claude Desktop keeps after updating |
 | AI Assistants | Clear AI Assistant History | Stored transcripts. Keeps every `memory/` folder, and every login |
 | AI Assistants | **Remove AI Tool Leftovers** | Both of the above plus plugins, extensions, generated images and state databases |
+| AI Assistants | Remove AI Sandbox Accounts | The local Windows accounts Codex creates to sandbox its commands — CodexSandboxOffline, CodexSandboxOnline and the CodexSandboxUsers group — with any profile folder. Known names only; **needs administrator rights**. Codex recreates them if you keep using it |
 
 ### Windows tweaks
 

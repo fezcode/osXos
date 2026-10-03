@@ -81,6 +81,7 @@ public static class ToolCatalog
             new AiCleanupTool(OSKind.Windows, AiJob.Caches),
             new AiCleanupTool(OSKind.Windows, AiJob.History),
             new AiCleanupTool(OSKind.Windows, AiJob.Everything),
+            new AiSandboxAccountsTool(runner, elevation),
             Tweak(OsXosTweaks.Copilot),
             Tweak(OsXosTweaks.Recall),
         }

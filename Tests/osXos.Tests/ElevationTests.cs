@@ -16,7 +16,7 @@ public class ElevationTests
     /// not a count: a tool quietly gaining elevation is the thing worth catching, and
     /// adding one here is a small deliberate act that comes with updating the README.
     /// </summary>
-    static readonly string[] MayElevate = { "windows.update-cache", "linux.package-cache" };
+    static readonly string[] MayElevate = { "windows.update-cache", "linux.package-cache", "windows.ai-sandbox-accounts" };
 
     [Fact]
     public void Only_the_tools_on_the_list_ask_for_elevation()
