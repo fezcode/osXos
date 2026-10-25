@@ -285,3 +285,7 @@ The app embeds the icon assets, so the generators are only needed when the desig
 ## License
 
 MIT
+
+## Application icon
+
+The approved transparent artwork is `Assets/icon-master.png`. Run `python scripts/make-icon.py` with Python and Pillow to regenerate the PNG sizes, Windows ICO and raster-backed SVG wrapper. Generated assets are committed; normal builds do not require Python.
