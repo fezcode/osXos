@@ -1,11 +1,13 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:OsXos.ViewModels"
+        xmlns:services="using:OsXos.Services"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="760"
         x:Class="OsXos.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        Classes.theatre="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}"
         Title="osXos — System Utilities"
         Icon="/Assets/icon.png"
         Width="1180" Height="760"
@@ -19,14 +21,155 @@
         ExtendClientAreaTitleBarHeightHint="0"
         ExtendClientAreaChromeHints="NoChrome">
 
+  <Window.Styles>
+    <Style Selector="Border.outerBackdrop">
+      <Setter Property="Background" Value="{DynamicResource BgSidebar}"/>
+    </Style>
+    <Style Selector="Border.shellFrame">
+      <Setter Property="Background" Value="{DynamicResource BgSidebar}"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Border.theatreBand, TextBlock.navNumber, TextBlock.navArrow, TextBlock.theatreNote">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="ListBox.nav">
+      <Setter Property="Margin" Value="12,0"/>
+    </Style>
+    <Style Selector="Border.navRow">
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="Border.navCount">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Border.navCount.hasCount">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="TextBlock.categoryCaption">
+      <Setter Property="Text" Value="CATEGORIES"/>
+      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="LetterSpacing" Value="1"/>
+      <Setter Property="Margin" Value="27,4,18,8"/>
+    </Style>
+    <Style Selector="Border.mainCanvas">
+      <Setter Property="Margin" Value="0,8,8,8"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BoxShadow" Value="0 4 24 #33000000"/>
+    </Style>
+    <Style Selector="Border.contentTopBar">
+      <Setter Property="Height" Value="48"/>
+    </Style>
+    <Style Selector="Window.theatre">
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector="Window.theatre Border.shellFrame">
+      <Setter Property="Margin" Value="15"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#5061D8"/>
+    </Style>
+    <Style Selector="Window.theatre Border.outerBackdrop">
+      <Setter Property="Background" Value="{DynamicResource TheatreFrame}"/>
+    </Style>
+    <Style Selector="Window.theatre Border.theatreBand">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="Window.theatre Border.sidebarBrand, Window.theatre Border.osStrip, Window.theatre TextBlock.sidebarCaption, Window.theatre StackPanel.frameControls">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Window.theatre TextBlock.categoryCaption">
+      <Setter Property="Text" Value="SELECT A CATEGORY"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="FontSize" Value="8"/>
+      <Setter Property="LetterSpacing" Value="1"/>
+      <Setter Property="Margin" Value="22,23,20,16"/>
+    </Style>
+    <Style Selector="Window.theatre ListBox.nav">
+      <Setter Property="Margin" Value="22,0"/>
+    </Style>
+    <Style Selector="Window.theatre ListBox.nav ListBoxItem">
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="0"/>
+    </Style>
+    <Style Selector="Window.theatre Border.navRow">
+      <Setter Property="Padding" Value="12,0"/>
+      <Setter Property="MinHeight" Value="52"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource SidebarDivider}"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="Window.theatre ListBox.nav Rectangle.ind, Window.theatre ListBox.nav PathIcon.navIcon, Window.theatre ListBox.nav Border.navCount, Window.theatre ListBox.nav PathIcon.chevron">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Window.theatre TextBlock.navNumber, Window.theatre TextBlock.navArrow, Window.theatre TextBlock.theatreNote">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="Window.theatre ListBox.nav ListBoxItem TextBlock.navName">
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector="StackPanel.sidebarFooter">
+      <Setter Property="Margin" Value="14,0,14,16"/>
+    </Style>
+    <Style Selector="Window.theatre StackPanel.sidebarFooter">
+      <Setter Property="Margin" Value="22,12,22,24"/>
+    </Style>
+    <Style Selector="Window.theatre Button.SidebarAbout">
+      <Setter Property="Padding" Value="0,7"/>
+    </Style>
+    <Style Selector="Window.theatre PathIcon.sidebarInfo">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Window.theatre Border.mainCanvas">
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="BoxShadow" Value="0 0 0 Transparent"/>
+    </Style>
+    <Style Selector="Window.theatre Border.contentTopBar">
+      <Setter Property="Height" Value="64"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+    </Style>
+    <Style Selector="Window.theatre TextBox.shellSearch">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="Window.theatre Button.bandControl PathIcon">
+      <Setter Property="Foreground" Value="{DynamicResource SidebarText}"/>
+    </Style>
+  </Window.Styles>
+
   <Panel>
     <!-- Dynamic theme outer shell backdrop -->
-    <Border Background="{DynamicResource BgSidebar}"/>
+    <Border Classes="outerBackdrop"/>
 
     <!-- The sidebar column's width, min and max are all set from MainWindowViewModel
          in code-behind, so the remembered width and the bounds a drag is held to have
          one owner. The literal here is only what the designer previews. -->
-    <Grid x:Name="RootGrid" ColumnDefinitions="240,*">
+    <Border Classes="shellFrame">
+      <Grid RowDefinitions="Auto,*">
+        <Border Classes="theatreBand" Height="46" Background="{DynamicResource TheatreHeader}"
+                PointerPressed="OnTitleBarPointerPressed" Padding="22,0,12,0">
+          <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+              <Ellipse Width="5" Height="5" Fill="{DynamicResource SidebarAccent}" VerticalAlignment="Center"/>
+              <TextBlock Text="OSXOS / OPERATION THEATRE" FontFamily="Cascadia Code, Consolas, monospace"
+                         FontSize="8" LetterSpacing="0.7" Foreground="{DynamicResource SidebarText}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <TextBlock Text="SYSTEM UTILITIES" FontFamily="Cascadia Code, Consolas, monospace" FontSize="8"
+                         LetterSpacing="0.7" Foreground="{DynamicResource SidebarText}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+              <Button Classes="WindowCtrl bandControl" Click="OnMinimizeClick" ToolTip.Tip="Minimize">
+                <PathIcon Data="{StaticResource IconMinimize}" Width="10" Height="2"/>
+              </Button>
+              <Button Classes="WindowCtrl bandControl" Click="OnMaximizeClick" ToolTip.Tip="Maximize / Restore">
+                <PathIcon Data="{StaticResource IconMaximize}" Width="9" Height="9"/>
+              </Button>
+              <Button Classes="WindowCloseCtrl bandControl" Click="OnCloseClick" ToolTip.Tip="Close">
+                <PathIcon Data="{StaticResource IconClose}" Width="9" Height="9"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </Border>
+    <Grid Grid.Row="1" x:Name="RootGrid" ColumnDefinitions="240,*">
 
       <!-- ========================================================= -->
       <!-- FULL-HEIGHT THEMED SIDEBAR                                -->
@@ -35,7 +178,7 @@
         <Grid RowDefinitions="Auto,*,Auto">
 
           <!-- Brand lockup (draggable area) -->
-          <Border Grid.Row="0" Background="Transparent"
+          <Border Grid.Row="0" Classes="sidebarBrand" Background="Transparent"
                   PointerPressed="OnTitleBarPointerPressed"
                   Padding="20,22,20,10">
             <StackPanel Spacing="14">
@@ -64,33 +207,34 @@
                find empty. -->
           <ScrollViewer Grid.Row="1" Margin="0,10,0,10">
             <StackPanel>
-              <TextBlock Text="CATEGORIES" FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                         Foreground="#7F9489" Margin="27,4,18,8"/>
+              <TextBlock Classes="categoryCaption" Foreground="{DynamicResource SidebarMuted}"/>
 
               <ListBox Classes="nav"
                        ItemsSource="{Binding NavItems}"
                        SelectedItem="{Binding SelectedNav}"
-                       Background="Transparent"
-                       Margin="12,0">
+                       Background="Transparent">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:NavItem">
+                    <Border Classes="navRow">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" VerticalAlignment="Center">
+                      <TextBlock Classes="navNumber mono" Text="{Binding NumberText}" FontSize="9" Width="19" Margin="0,0,9,0" VerticalAlignment="Center"/>
                       <Rectangle Classes="ind" Width="3" Height="16" RadiusX="1.5" RadiusY="1.5" Margin="0,0,8,0"/>
-                      <PathIcon Grid.Column="1" Data="{Binding Icon}" Width="15" Height="15"
+                      <PathIcon Grid.Column="1" Classes="navIcon" Data="{Binding Icon}" Width="15" Height="15"
                                 Margin="0,0,10,0" VerticalAlignment="Center"/>
-                      <TextBlock Grid.Column="2" Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Column="2" Classes="navName" Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"/>
                       <!-- Fixed height and explicit centring: left to stretch, the
                            border takes the row height and the count floats off centre. -->
-                      <Border Grid.Column="3" Background="#1AFFFFFF" CornerRadius="9"
+                      <Border Grid.Column="3" Classes="navCount" CornerRadius="9"
                               Height="18" MinWidth="20" Padding="6,0" VerticalAlignment="Center"
-                              IsVisible="{Binding HasCount}">
-                        <TextBlock Text="{Binding CountText}" FontSize="10" Classes="mono"
-                                   Foreground="#A8BBB1"
+                              Classes.hasCount="{Binding HasCount}">
+                        <TextBlock Text="{Binding CountText}" FontSize="10" Classes="mono navCountText"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                       </Border>
                       <PathIcon Grid.Column="4" Classes="chevron" Data="{StaticResource IconChevronRight}"
                                 Width="10" Height="10" Margin="6,0,2,0" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Column="4" Classes="navArrow" Text="↗" FontSize="18" VerticalAlignment="Center" Margin="12,0,0,0"/>
                     </Grid>
+                    </Border>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
@@ -98,21 +242,23 @@
           </ScrollViewer>
 
           <!-- Bottom: about action, OS badge strip and footer -->
-          <StackPanel Grid.Row="2" Margin="14,0,14,16" Spacing="8">
+          <StackPanel Grid.Row="2" Classes="sidebarFooter" Spacing="8">
+            <TextBlock Classes="theatreNote mono" Text="Every tool explains its changes before you run it." FontSize="9" LineHeight="16" Foreground="{DynamicResource SidebarMuted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
             <Button Classes="SidebarAbout" Command="{Binding OpenAboutCommand}" HorizontalAlignment="Stretch">
               <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                <PathIcon Data="{StaticResource IconInfo}" Width="13" Height="13" Foreground="#FFFFFF"
+                <PathIcon Classes="sidebarInfo" Data="{StaticResource IconInfo}" Width="13" Height="13" Foreground="#FFFFFF"
                           VerticalAlignment="Center" Margin="2,0,8,0"/>
-                <TextBlock Grid.Column="1" Text="About osXos" FontSize="12" Foreground="#D0E3DA"
+                <TextBlock Grid.Column="1" Text="About osXos" FontSize="12" Foreground="{DynamicResource SidebarText}"
                            FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2" Text="{Binding VersionText}" FontSize="10" Classes="mono dim"
+                <TextBlock Grid.Column="2" Text="{Binding VersionText}" FontSize="10" Classes="mono"
+                           Foreground="{DynamicResource SidebarSubtle}"
                            VerticalAlignment="Center"/>
               </Grid>
             </Button>
 
             <!-- OS badge strip — one stripe per platform, the running one lit.
                  The osXos counterpart of Cogas's store spectrum bar. -->
-            <Border Background="{DynamicResource SidebarHover}" CornerRadius="6" Padding="8,5"
+            <Border Classes="osStrip" Background="{DynamicResource SidebarHover}" CornerRadius="{DynamicResource CornerRadius6}" Padding="8,5"
                     BorderBrush="{DynamicResource SidebarBorder}" BorderThickness="1">
               <ItemsControl ItemsSource="{Binding OsBadges}">
                 <ItemsControl.ItemsPanel>
@@ -127,7 +273,7 @@
                             ToolTip.Placement="Top" ToolTip.VerticalOffset="-4">
                       <ToolTip.Tip>
                         <StackPanel Orientation="Horizontal" Spacing="9" Margin="2">
-                          <Border Width="26" Height="26" CornerRadius="6" Background="{Binding Brush}">
+                          <Border Width="26" Height="26" CornerRadius="{DynamicResource CornerRadius6}" Background="{Binding Brush}">
                             <PathIcon Data="{Binding Icon}" Width="14" Height="14" Foreground="#FFFFFF"/>
                           </Border>
                           <StackPanel VerticalAlignment="Center">
@@ -145,7 +291,7 @@
               </ItemsControl>
             </Border>
 
-            <TextBlock Text="SYSTEM UTILITIES" FontSize="9" FontWeight="Bold" LetterSpacing="1"
+            <TextBlock Classes="sidebarCaption" Text="SYSTEM UTILITIES" FontSize="9" FontWeight="Bold" LetterSpacing="1"
                        Foreground="#80FFFFFF" HorizontalAlignment="Center"/>
           </StackPanel>
         </Grid>
@@ -154,18 +300,15 @@
       <!-- ========================================================= -->
       <!-- RIGHT: NESTED ROUNDED CONTENT CANVAS                      -->
       <!-- ========================================================= -->
-      <Border Grid.Column="1"
-              Margin="0,8,8,8"
-              CornerRadius="16"
+      <Border Grid.Column="1" Classes="mainCanvas"
+              CornerRadius="{DynamicResource CornerRadius16}"
               ClipToBounds="True"
               Background="{DynamicResource Bg0}"
-              BorderBrush="{DynamicResource Line}"
-              BorderThickness="1"
-              BoxShadow="0 4 24 #33000000">
-        <Grid RowDefinitions="48,*">
+              BorderBrush="{DynamicResource Line}">
+        <Grid RowDefinitions="Auto,*">
 
           <!-- Content top bar (draggable) -->
-          <Border Grid.Row="0" Background="{DynamicResource BgTopBar}"
+          <Border Grid.Row="0" Classes="contentTopBar" Background="{DynamicResource BgTopBar}"
                   BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
                   PointerPressed="OnTitleBarPointerPressed">
             <Grid ColumnDefinitions="Auto,*,Auto" Margin="20,0,12,0" VerticalAlignment="Center">
@@ -181,7 +324,7 @@
               <!-- Tool search, spanning every category -->
               <Grid Grid.Column="1" ColumnDefinitions="*,Auto" MaxWidth="320" Margin="24,0,14,0"
                     HorizontalAlignment="Right" VerticalAlignment="Center">
-                <TextBox Text="{Binding Query}" Watermark="Search tools..." FontSize="12"
+                <TextBox Classes="shellSearch" Text="{Binding Query}" Watermark="Search tools..." FontSize="12"
                          Padding="30,5,26,5" MinHeight="0"/>
                 <PathIcon Data="{StaticResource IconSearch}" Width="12" Height="12"
                           Foreground="{DynamicResource Dim}"
@@ -197,8 +340,8 @@
               </Grid>
 
               <!-- Running-OS pill and window controls -->
-              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <Border Background="{DynamicResource SurfaceHover}" CornerRadius="6" Padding="8,3"
+              <StackPanel Grid.Column="2" Classes="frameControls" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <Border Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius6}" Padding="8,3"
                         BorderBrush="{DynamicResource Line}" BorderThickness="1"
                         Margin="0,0,14,0"
                         ToolTip.Tip="osXos shows the tools for the operating system it is running on.">
@@ -241,13 +384,15 @@
                     Cursor="SizeWestEast"
                     DragCompleted="OnSidebarResized"/>
     </Grid>
+      </Grid>
+    </Border>
 
     <!-- ========================================================= -->
     <!-- UNSAVED CHANGES MODAL PROMPT OVERLAY                      -->
     <!-- ========================================================= -->
     <Border IsVisible="{Binding ShowUnsavedPrompt}" Background="#80000000"
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-      <Border Width="440" Background="{DynamicResource BgElevated}" CornerRadius="12"
+      <Border Width="440" Background="{DynamicResource BgElevated}" CornerRadius="{DynamicResource CornerRadius12}"
               BorderBrush="{DynamicResource LineBright}" BorderThickness="1"
               BoxShadow="0 16 48 #66000000" Padding="24"
               HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -284,7 +429,7 @@
     <Border IsVisible="{Binding ShowAbout}" Background="#A6000000"
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             PointerPressed="OnAboutScrimPressed">
-      <Border Width="560" MaxHeight="620" Background="{DynamicResource BgElevated}" CornerRadius="16"
+      <Border Width="560" MaxHeight="620" Background="{DynamicResource BgElevated}" CornerRadius="{DynamicResource CornerRadius16}"
               BorderBrush="{DynamicResource LineBright}" BorderThickness="1"
               BoxShadow="0 24 64 #80000000" ClipToBounds="True"
               HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -294,33 +439,33 @@
                clips to its rectangle, not its corner radius, so the bands that
                reach the edge carry matching radii themselves. -->
           <Border Grid.Row="0" Background="{DynamicResource BgSidebar}" Padding="28,24,20,22"
-                  CornerRadius="15,15,0,0">
+                  CornerRadius="{DynamicResource CornerRadiusTop15}">
             <StackPanel Spacing="12">
               <StackPanel Orientation="Horizontal" Spacing="13" VerticalAlignment="Center">
                 <PathIcon Data="{StaticResource IconBrand}" Width="28" Height="28"
-                          Foreground="{DynamicResource Cyan}" VerticalAlignment="Center"/>
+                          Foreground="{DynamicResource SidebarAccent}" VerticalAlignment="Center"/>
                 <TextBlock FontSize="34" LetterSpacing="1.6"
                            FontFamily="{StaticResource WordmarkFontFamily}"
                            VerticalAlignment="Center">
                   <Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/><!--
-               --><Run Text="X" FontWeight="Bold" Foreground="{DynamicResource Cyan}"/><!--
+               --><Run Text="X" FontWeight="Bold" Foreground="{DynamicResource SidebarAccent}"/><!--
                --><Run Text="os" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                 </TextBlock>
               </StackPanel>
               <TextBlock Text="SYSTEM UTILITIES FOR WINDOWS, MACOS AND LINUX" FontSize="9" FontWeight="Bold"
-                         LetterSpacing="1.5" Foreground="#8FA89B"/>
+                         LetterSpacing="1.5" Foreground="{DynamicResource SidebarSubtle}"/>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <Border Background="#1AFFFFFF" CornerRadius="5" Padding="8,3"
+                <Border Background="#1AFFFFFF" CornerRadius="{DynamicResource CornerRadius5}" Padding="8,3"
                         BorderBrush="#26FFFFFF" BorderThickness="1">
-                  <TextBlock Text="{Binding AboutVersionText}" FontSize="10" Classes="mono" Foreground="#D0E3DA"/>
+                  <TextBlock Text="{Binding AboutVersionText}" FontSize="10" Classes="mono" Foreground="{DynamicResource SidebarText}"/>
                 </Border>
-                <Border Background="#1AFFFFFF" CornerRadius="5" Padding="8,3"
+                <Border Background="#1AFFFFFF" CornerRadius="{DynamicResource CornerRadius5}" Padding="8,3"
                         BorderBrush="#26FFFFFF" BorderThickness="1">
-                  <TextBlock Text="{Binding AboutRuntimeText}" FontSize="10" Classes="mono" Foreground="#8FA89B"/>
+                  <TextBlock Text="{Binding AboutRuntimeText}" FontSize="10" Classes="mono" Foreground="{DynamicResource SidebarSubtle}"/>
                 </Border>
-                <Border Background="#1AFFFFFF" CornerRadius="5" Padding="8,3"
+                <Border Background="#1AFFFFFF" CornerRadius="{DynamicResource CornerRadius5}" Padding="8,3"
                         BorderBrush="#26FFFFFF" BorderThickness="1">
-                  <TextBlock Text="{Binding AboutPlatformText}" FontSize="10" Classes="mono" Foreground="#8FA89B"/>
+                  <TextBlock Text="{Binding AboutPlatformText}" FontSize="10" Classes="mono" Foreground="{DynamicResource SidebarSubtle}"/>
                 </Border>
               </StackPanel>
             </StackPanel>
@@ -331,7 +476,7 @@
               <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
                          Text="osXos collects the small maintenance jobs you would otherwise do from a terminal — clearing icon caches, emptying temp folders, flushing DNS — and gives each one a window that explains exactly what it will do before it does it."/>
 
-              <Border Background="{DynamicResource SurfaceHover}" CornerRadius="8" Padding="14,12"
+              <Border Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius8}" Padding="14,12"
                       BorderBrush="{DynamicResource Line}" BorderThickness="1">
                 <StackPanel Spacing="6">
                   <TextBlock Text="HOW IT WORKS" Classes="eyebrow"/>
@@ -340,7 +485,7 @@
                 </StackPanel>
               </Border>
 
-              <Border Background="{DynamicResource SurfaceHover}" CornerRadius="8" Padding="14,12"
+              <Border Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius8}" Padding="14,12"
                       BorderBrush="{DynamicResource Line}" BorderThickness="1">
                 <StackPanel Spacing="6">
                   <TextBlock Text="ELEVATION" Classes="eyebrow"/>
@@ -359,7 +504,7 @@
 
           <Border Grid.Row="2" Background="{DynamicResource BgTopBar}" Padding="20,14"
                   BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,1,0,0"
-                  CornerRadius="0,0,15,15">
+                  CornerRadius="{DynamicResource CornerRadiusBottom15}">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="MIT licensed" FontSize="11" Classes="dim" VerticalAlignment="Center"/>
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">

@@ -158,8 +158,12 @@ public class ThemeCatalogTests
             Assert.True(Color.TryParse(hex, out _), $"{key}: '{hex}' is not a colour");
         }
 
-        if (theme.SidebarAccent is { } sidebarAccent)
-            Assert.True(Color.TryParse(sidebarAccent, out _), $"{key}: bad SidebarAccent");
+        foreach (var hex in new[]
+                 {
+                     theme.SidebarAccent, theme.SidebarSelection, theme.OnSidebarSelection,
+                     theme.SidebarText, theme.SidebarMuted, theme.SidebarSubtle,
+                 }.OfType<string>())
+            Assert.True(Color.TryParse(hex, out _), $"{key}: '{hex}' is not a sidebar colour");
     }
 
     [Fact]
@@ -221,9 +225,9 @@ public class ThemeCatalogTests
     }
 
     [Fact]
-    public void All_nine_palettes_and_seven_font_stacks_are_present()
+    public void All_ten_palettes_and_seven_font_stacks_are_present()
     {
-        Assert.Equal(9, ThemeCatalog.Themes.Count);
+        Assert.Equal(10, ThemeCatalog.Themes.Count);
         Assert.Equal(7, ThemeCatalog.Fonts.Count);
     }
 }

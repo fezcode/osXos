@@ -77,6 +77,13 @@
         <StreamGeometry x:Key="IconSuccess">M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z</StreamGeometry>
         <StreamGeometry x:Key="IconFailure">M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z</StreamGeometry>
         <StreamGeometry x:Key="IconChevronLeft">M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z</StreamGeometry>
+        <StreamGeometry x:Key="IconArrowNorthEast">M5 4h15v15h-1.5V6.6L4.6 20.5l-1.1-1.1L17.4 5.5H5z</StreamGeometry>
+        <StreamGeometry x:Key="IconArrowRight">M4 11.25h13.6l-5.3-5.3 1.1-1.1L20.55 12l-7.15 7.15-1.1-1.1 5.3-5.3H4z</StreamGeometry>
+        <SolidColorBrush x:Key="TheatreFrame" Color="#192FBE"/>
+        <SolidColorBrush x:Key="TheatreHeader" Color="#10219A"/>
+        <x:Double x:Key="ToolWindowWidth">660</x:Double>
+        <x:Double x:Key="ToolWindowHeight">580</x:Double>
+        <SolidColorBrush x:Key="ToolWindowBackdrop" Color="#FAF7EE"/>
         <!-- ========================================================= -->
         <!-- EDITORIAL DESIGN SYSTEM: WARM IVORY & FOREST GREEN         -->
         <!-- ========================================================= -->
@@ -134,6 +141,29 @@
         <SolidColorBrush x:Key="SidebarSelected" Color="#264738"/>
         <SolidColorBrush x:Key="SidebarBorder" Color="#2B5240"/>
         <SolidColorBrush x:Key="SidebarDivider" Color="#244535"/>
+        <SolidColorBrush x:Key="SidebarText" Color="#D0E3DA"/>
+        <SolidColorBrush x:Key="SidebarMuted" Color="#7F9489"/>
+        <SolidColorBrush x:Key="SidebarSubtle" Color="#A8BBB1"/>
+        <SolidColorBrush x:Key="SidebarSelectedText" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SidebarSelectedIcon" Color="#D97706"/>
+        <SolidColorBrush x:Key="SidebarSelectedIndicator" Color="#D97706"/>
+        <SolidColorBrush x:Key="SidebarSelectedBadge" Color="#1AFFFFFF"/>
+        <SolidColorBrush x:Key="SidebarSelectedBadgeText" Color="#A8BBB1"/>
+
+        <!-- Palettes can use square frames; each existing radius is restored when
+             switching back to a rounded palette. Circular status marks stay round. -->
+        <CornerRadius x:Key="CornerRadius4">4</CornerRadius>
+        <CornerRadius x:Key="CornerRadius5">5</CornerRadius>
+        <CornerRadius x:Key="CornerRadius6">6</CornerRadius>
+        <CornerRadius x:Key="CornerRadius7">7</CornerRadius>
+        <CornerRadius x:Key="CornerRadius8">8</CornerRadius>
+        <CornerRadius x:Key="CornerRadius9">9</CornerRadius>
+        <CornerRadius x:Key="CornerRadius10">10</CornerRadius>
+        <CornerRadius x:Key="CornerRadius12">12</CornerRadius>
+        <CornerRadius x:Key="CornerRadius14">14</CornerRadius>
+        <CornerRadius x:Key="CornerRadius16">16</CornerRadius>
+        <CornerRadius x:Key="CornerRadiusTop15">15,15,0,0</CornerRadius>
+        <CornerRadius x:Key="CornerRadiusBottom15">0,0,15,15</CornerRadius>
 
         <!-- Per-OS identity brushes, used by the sidebar badge strip and by any
              tool card that needs to name the platform it belongs to. -->
@@ -188,7 +218,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{DynamicResource Text}"/>
             <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -224,7 +254,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
             <Setter Property="Padding" Value="18,8"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -258,7 +288,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
             <Setter Property="Padding" Value="22,11"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -288,7 +318,7 @@
             <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -311,7 +341,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Red}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -329,7 +359,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Padding" Value="6"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.Icon:pointerover /template/ ContentPresenter">
@@ -343,7 +373,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="7"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -361,7 +391,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="7"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -380,7 +410,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="5"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -409,7 +439,7 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="Height" Value="28"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
@@ -434,7 +464,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,3"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
@@ -461,7 +491,7 @@
         <Style Selector="Button.Collection">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -478,7 +508,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.SidebarAbout:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -567,7 +597,7 @@
             <Setter Property="Background" Value="{DynamicResource Surface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="Foreground" Value="{DynamicResource Text}"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Transitions">
@@ -598,7 +628,7 @@
             <Setter Property="Background" Value="{DynamicResource Surface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="Foreground" Value="{DynamicResource Text}"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="FontSize" Value="12.5"/>
         </Style>
@@ -673,7 +703,7 @@
             <Setter Property="Background" Value="{DynamicResource Surface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius12}"/>
             <Setter Property="Padding" Value="20"/>
             <Setter Property="Transitions">
                 <Transitions>
@@ -719,7 +749,7 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius5}"/>
             <Setter Property="Padding" Value="7,2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -766,14 +796,14 @@
             <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource LineBright}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius14}"/>
             <Setter Property="Padding" Value="24"/>
         </Style>
         <Style Selector="Border.row">
             <Setter Property="Background" Value="{DynamicResource Surface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="Padding" Value="14,10"/>
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Transitions">
@@ -797,7 +827,7 @@
         <!-- ========================================================= -->
 
         <Style Selector="ListBox.nav ListBoxItem">
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius8}"/>
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Padding" Value="12,10"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -806,7 +836,7 @@
             <Setter Property="Fill" Value="Transparent"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected Rectangle.ind">
-            <Setter Property="Fill" Value="{DynamicResource SidebarAccent}"/>
+            <Setter Property="Fill" Value="{DynamicResource SidebarSelectedIndicator}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem PathIcon.chevron">
             <Setter Property="Opacity" Value="0"/>
@@ -814,7 +844,7 @@
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected PathIcon.chevron">
             <Setter Property="Opacity" Value="1"/>
-            <Setter Property="Foreground" Value="{DynamicResource SidebarAccent}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSelectedIcon}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:pointerover PathIcon.chevron">
             <Setter Property="Opacity" Value="0.6"/>
@@ -824,20 +854,38 @@
             <Setter Property="Background" Value="{DynamicResource SidebarSelected}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem TextBlock">
-            <Setter Property="Foreground" Value="#D0E3DA"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem PathIcon">
-            <Setter Property="Foreground" Value="#D0E3DA"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected TextBlock">
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSelectedText}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected PathIcon">
-            <Setter Property="Foreground" Value="{DynamicResource SidebarAccent}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSelectedIcon}"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SidebarHover}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SidebarSelected}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover PathIcon.chevron">
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSelectedIcon}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem Border.navCount">
+            <Setter Property="Background" Value="#1AFFFFFF"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem TextBlock.navCountText">
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSubtle}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected Border.navCount">
+            <Setter Property="Background" Value="{DynamicResource SidebarSelectedBadge}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected TextBlock.navCountText">
+            <Setter Property="Foreground" Value="{DynamicResource SidebarSelectedBadgeText}"/>
         </Style>
 
         <!-- ========================================================= -->

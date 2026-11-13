@@ -19,6 +19,7 @@ public sealed class StepRow
     public required string Title { get; init; }
     public required string Detail { get; init; }
     public string NumberText => Number.ToString("0");
+    public string IndexText => Number.ToString("00");
 }
 
 /// <summary>One found item on the Review stage.</summary>
@@ -88,6 +89,11 @@ public sealed class ToolWindowViewModel : ViewModelBase
     public string Title { get; }
     public string Eyebrow { get; }
     public string Summary { get; }
+    public bool IsReadOnly => _tool.IsReadOnly;
+    public string OperationLabel => IsReadOnly ? "READ-ONLY" : "SYSTEM UTILITY";
+    public string TheatreEyebrow => Eyebrow.Split('·')[0].Trim().ToUpperInvariant() +
+        (IsReadOnly ? " / REPORT" : " / UTILITY");
+    public string ActionNote => IsReadOnly ? "READ-ONLY · LOCAL REPORT" : "PREVIEW FIRST · RUN AFTER REVIEW";
     public StreamGeometry Icon { get; }
     public string? Warning { get; }
     public bool HasWarning { get; }

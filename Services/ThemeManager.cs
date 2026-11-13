@@ -8,6 +8,8 @@ namespace OsXos.Services;
 
 public static class ThemeManager
 {
+    public static ThemeAppearance Appearance { get; } = new();
+
     public static void ApplyTheme(ThemeDefinition theme)
     {
         if (Application.Current == null) return;
@@ -59,12 +61,36 @@ public static class ThemeManager
         // Sidebar dynamic states. On a dark palette the sidebar is already near-black,
         // so the same white overlays read as too faint — they get a little more lift.
         SetAlphaBrush(res, "SidebarHover", "#FFFFFF", theme.IsDark ? 0.10 : 0.08);
-        SetAlphaBrush(res, "SidebarSelected", "#FFFFFF", theme.IsDark ? 0.18 : 0.15);
+        if (theme.SidebarSelection is { } selection)
+            SetBrush(res, "SidebarSelected", selection);
+        else
+            SetAlphaBrush(res, "SidebarSelected", "#FFFFFF", theme.IsDark ? 0.18 : 0.15);
+        SetBrush(res, "SidebarSelectedText", theme.OnSidebarSelection ?? "#FFFFFF");
+        SetBrush(res, "SidebarSelectedIcon", theme.OnSidebarSelection ?? theme.SidebarAccent ?? theme.Cyan);
+        SetBrush(res, "SidebarSelectedIndicator", theme.OnSidebarSelection ?? theme.SidebarAccent ?? theme.Cyan);
+        if (theme.OnSidebarSelection is { } selectionInk)
+            SetAlphaBrush(res, "SidebarSelectedBadge", selectionInk, 0.10);
+        else
+            SetBrush(res, "SidebarSelectedBadge", "#1AFFFFFF");
+        SetBrush(res, "SidebarSelectedBadgeText", theme.OnSidebarSelection ?? "#A8BBB1");
+        SetBrush(res, "SidebarText", theme.SidebarText ?? "#D0E3DA");
+        SetBrush(res, "SidebarMuted", theme.SidebarMuted ?? "#7F9489");
+        SetBrush(res, "SidebarSubtle", theme.SidebarSubtle ?? "#A8BBB1");
         // A black inner edge disappears against a near-black sidebar, so dark palettes
         // get a faint light edge instead.
         if (theme.IsDark) SetAlphaBrush(res, "SidebarBorder", "#FFFFFF", 0.08);
         else SetAlphaBrush(res, "SidebarBorder", "#000000", 0.25);
         SetAlphaBrush(res, "SidebarDivider", "#FFFFFF", theme.IsDark ? 0.12 : 0.10);
+
+        // Restore each radius as well as the colors when leaving a square palette.
+        foreach (var radius in new[] { 4, 5, 6, 7, 8, 9, 10, 12, 14, 16 })
+            res[$"CornerRadius{radius}"] = new CornerRadius(theme.SquareCorners ? 0 : radius);
+        res["CornerRadiusTop15"] = theme.SquareCorners ? new CornerRadius(0) : new CornerRadius(15, 15, 0, 0);
+        res["CornerRadiusBottom15"] = theme.SquareCorners ? new CornerRadius(0) : new CornerRadius(0, 0, 15, 15);
+        res["ToolWindowWidth"] = theme.Key == "operation-theatre" ? 1180d : 660d;
+        res["ToolWindowHeight"] = theme.Key == "operation-theatre" ? 680d : 580d;
+        SetBrush(res, "ToolWindowBackdrop", theme.Key == "operation-theatre" ? "#192FBE" : theme.Bg0);
+        Appearance.IsTheatre = theme.Key == "operation-theatre";
 
         // Fluent resolves input text, placeholders and backgrounds from its own
         // variant-scoped brushes, not from the setters above — so on a variant switch
@@ -153,5 +179,18 @@ public static class ThemeManager
         {
             // ignore
         }
+    }
+}
+
+/// <summary>Live layout choice shared by the real windows and their nested views.</summary>
+public sealed class ThemeAppearance : AvaloniaObject
+{
+    public static readonly StyledProperty<bool> IsTheatreProperty =
+        AvaloniaProperty.Register<ThemeAppearance, bool>(nameof(IsTheatre));
+
+    public bool IsTheatre
+    {
+        get => GetValue(IsTheatreProperty);
+        internal set => SetValue(IsTheatreProperty, value);
     }
 }

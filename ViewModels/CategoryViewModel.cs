@@ -8,13 +8,15 @@ namespace OsXos.ViewModels;
 /// <summary>One tool, as a card in a category list.</summary>
 public sealed class ToolCardViewModel : ViewModelBase
 {
-    public ToolCardViewModel(ITool tool, Func<ITool, Task> open)
+    public ToolCardViewModel(ITool tool, Func<ITool, Task> open, int index = 0)
     {
         Tool = tool;
+        NumberText = (index + 1).ToString("00");
         Icon = Icons.Get(tool.IconKey);
         OpenCommand = ReactiveCommand.CreateFromTask(() => open(tool));
     }
 
+    public string NumberText { get; }
     public ITool Tool { get; }
     public StreamGeometry Icon { get; }
     public string Name => Tool.Name;
@@ -43,7 +45,7 @@ public sealed class CategoryViewModel : ViewModelBase
         Name = info.Name;
         Icon = Icons.Get(info.IconKey);
         OsName = CategoryCatalog.DisplayName(os);
-        Cards = tools.Select(t => new ToolCardViewModel(t, open)).ToList();
+        Cards = tools.Select((t, i) => new ToolCardViewModel(t, open, i)).ToList();
         CountText = Cards.Count == 1 ? "1 tool" : $"{Cards.Count} tools";
 
         // The badge states what is true of this category rather than repeating a
@@ -133,7 +135,7 @@ public sealed class SearchViewModel : ViewModelBase
     public void Apply(string query)
     {
         Query = query;
-        Cards = _registry.Search(query).Select(t => new ToolCardViewModel(t, _open)).ToList();
+        Cards = _registry.Search(query).Select((t, i) => new ToolCardViewModel(t, _open, i)).ToList();
         foreach (var card in Cards) _ = card.State.LoadAsync(card.Tool);
     }
 }

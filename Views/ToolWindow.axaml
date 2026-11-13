@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:OsXos.ViewModels"
+        xmlns:services="using:OsXos.Services"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="660" d:DesignHeight="580"
@@ -8,13 +9,18 @@
         x:DataType="vm:ToolWindowViewModel"
         Title="{Binding Title}"
         Icon="/Assets/icon.png"
-        Width="660" Height="580"
+        Width="{DynamicResource ToolWindowWidth}" Height="{DynamicResource ToolWindowHeight}"
+        Classes.theatre="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}"
+        ExtendClientAreaToDecorationsHint="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}"
+        ExtendClientAreaTitleBarHeightHint="0"
+        ExtendClientAreaChromeHints="NoChrome"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         TransparencyLevelHint="Mica, AcrylicBlur, Blur"
-        Background="{DynamicResource Bg0}">
+        Background="{DynamicResource ToolWindowBackdrop}">
 
   <Window.Styles>
+    <Style Selector="Window.theatre"><Setter Property="FontWeight" Value="Normal"/></Style>
     <!-- Stage rail dot. Filled once that stage has been reached, hollow before. -->
     <Style Selector="Ellipse.stageDot">
       <Setter Property="Width" Value="9"/>
@@ -41,32 +47,160 @@
     <Style Selector="TextBlock.stageLabel.on">
       <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
     </Style>
+
+    <Style Selector=":is(Control).theatreOnly"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector="Window.theatre :is(Control).theatreOnly"><Setter Property="IsVisible" Value="True"/></Style>
+    <Style Selector="Window.theatre :is(Control).standardOnly"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector="Border.theatreFrame">
+      <Setter Property="Background" Value="{DynamicResource Bg0}"/>
+    </Style>
+    <Style Selector="Window.theatre Border.theatreFrame">
+      <Setter Property="Margin" Value="15"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#495ED9"/>
+    </Style>
+    <Style Selector="Grid.toolContent"><Setter Property="Margin" Value="24,20"/></Style>
+    <Style Selector="Window.theatre Grid.toolContent"><Setter Property="Margin" Value="0"/></Style>
+    <Style Selector="Grid.toolHeading">
+      <Setter Property="Grid.Row" Value="0"/>
+      <Setter Property="Margin" Value="0,0,0,14"/>
+    </Style>
+    <Style Selector="Window.theatre Grid.toolHeading">
+      <Setter Property="Grid.Row" Value="1"/>
+      <Setter Property="Margin" Value="38,30,38,24"/>
+    </Style>
+    <Style Selector="StackPanel.headingText"><Setter Property="Spacing" Value="2"/></Style>
+    <Style Selector="Window.theatre StackPanel.headingText"><Setter Property="Spacing" Value="16"/></Style>
+    <Style Selector="TextBlock.toolSummary"><Setter Property="FontSize" Value="12"/></Style>
+    <Style Selector="Window.theatre TextBlock.toolSummary"><Setter Property="FontWeight" Value="Normal"/></Style>
+    <Style Selector="TextBlock.featureTitle">
+      <Setter Property="FontSize" Value="38"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="-1.3"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+    </Style>
+    <Style Selector="TextBlock.theatreMicro">
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="0.3"/>
+    </Style>
+    <Style Selector="Grid.theatreStages"><Setter Property="Height" Value="64"/></Style>
+    <Style Selector="Border.stageCell">
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+      <Setter Property="BorderThickness" Value="0,0,1,1"/>
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource Muted}"/>
+    </Style>
+    <Style Selector="Border.stageCell.current">
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+      <Setter Property="BorderThickness" Value="0,0,0,3"/>
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource Accent}"/>
+    </Style>
+    <Style Selector="Window.theatre Panel.toolBody"><Setter Property="Margin" Value="38,0,38,20"/></Style>
+    <Style Selector="Grid.stepRow"><Setter Property="Margin" Value="0,0,4,14"/></Style>
+    <Style Selector="Window.theatre Grid.stepRow"><Setter Property="Margin" Value="0"/></Style>
+    <Style Selector="Window.theatre Border.stepRule">
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,4"/>
+    </Style>
+    <Style Selector="TextBlock.stepTitle">
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    <Style Selector="Window.theatre TextBlock.stepTitle"><Setter Property="FontWeight" Value="Medium"/></Style>
+    <Style Selector="Border.toolFooter"><Setter Property="Margin" Value="0,18,0,0"/></Style>
+    <Style Selector="Window.theatre Border.toolFooter">
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Padding" Value="28,18"/>
+      <Setter Property="MinHeight" Value="84"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+    </Style>
+    <Style Selector="Window.theatre Button.Accent">
+      <Setter Property="Padding" Value="18,13"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="Window.theatre Button.Ghost"><Setter Property="FontWeight" Value="Normal"/></Style>
+    <Style Selector="Button.theatreClose">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="8"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.theatreClose:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#20FFFFFF"/>
+    </Style>
   </Window.Styles>
 
-  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="24,20">
+  <Border Classes="theatreFrame">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*">
+      <Border Grid.ColumnSpan="2" Classes="theatreOnly theatreBand"
+              Background="{DynamicResource TheatreHeader}" Height="46" Padding="22,0"
+              PointerPressed="OnTheatreTitlePressed">
+        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Ellipse Width="5" Height="5" Fill="{DynamicResource SidebarAccent}" VerticalAlignment="Center"/>
+            <TextBlock Text="OSXOS / OPERATION THEATRE" Classes="theatreMicro" Foreground="{DynamicResource SidebarText}"/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Text="SYSTEM UTILITIES · LOCAL TO YOUR DEVICE" Classes="theatreMicro"
+                     Foreground="{DynamicResource SidebarText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,26,0"/>
+          <Button Grid.Column="2" Classes="theatreClose" Command="{Binding CloseCommand}" ToolTip.Tip="Close tool">
+            <PathIcon Data="{StaticResource IconClose}" Width="11" Height="11" Foreground="{DynamicResource SidebarText}"/>
+          </Button>
+        </Grid>
+      </Border>
+      <Border Grid.Row="1" Classes="theatreOnly toolSidebar" Width="260" Background="{DynamicResource BgSidebar}" Padding="22,32">
+        <StackPanel Spacing="28">
+          <TextBlock Text="SELECTED INSTRUMENT" Classes="theatreMicro" Foreground="{DynamicResource SidebarText}"/>
+          <Border Background="{DynamicResource SidebarSelected}" Padding="12,26" MinHeight="82">
+            <Grid ColumnDefinitions="26,*,Auto">
+              <TextBlock Text="01" Classes="theatreMicro" Foreground="{DynamicResource SidebarSelectedText}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12" FontWeight="Medium" TextWrapping="Wrap"
+                         Foreground="{DynamicResource SidebarSelectedText}" VerticalAlignment="Center" Margin="4,0,8,0"/>
+              <PathIcon Grid.Column="2" Data="{StaticResource IconArrowNorthEast}" Width="12" Height="12"
+                        Foreground="{DynamicResource SidebarSelectedText}" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+          <TextBlock Text="Explain the steps.&#10;Review what was found.&#10;Then choose whether to run." FontSize="10"
+                     FontFamily="Cascadia Code, Consolas, monospace" LineHeight="20"
+                     Foreground="{DynamicResource SidebarMuted}" TextWrapping="Wrap" Margin="0,20,0,0"/>
+          <Border BorderBrush="{DynamicResource SidebarDivider}" BorderThickness="0,1,0,0" Padding="0,20,0,0">
+            <TextBlock Text="{Binding OperationLabel}" Classes="theatreMicro" Foreground="{DynamicResource SidebarMuted}"/>
+          </Border>
+        </StackPanel>
+      </Border>
+      <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto" Classes="toolContent">
 
     <!-- ========================================================= -->
     <!-- HEADER                                                    -->
     <!-- ========================================================= -->
-    <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,14">
-      <Border Width="42" Height="42" CornerRadius="10" Margin="0,0,14,0"
+    <Grid Classes="toolHeading" ColumnDefinitions="Auto,*">
+      <Border Classes="standardOnly" Width="42" Height="42" CornerRadius="{DynamicResource CornerRadius10}" Margin="0,0,14,0"
               Background="{DynamicResource AccentMuted}"
               BorderBrush="{DynamicResource Line}" BorderThickness="1"
               VerticalAlignment="Top">
         <PathIcon Data="{Binding Icon}" Width="19" Height="19" Foreground="{DynamicResource Accent}"/>
       </Border>
 
-      <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-        <TextBlock Text="{Binding Eyebrow}" Classes="eyebrow"/>
-        <TextBlock Text="{Binding Title}" Classes="h2"/>
-        <TextBlock Text="{Binding Summary}" FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+      <StackPanel Grid.Column="1" Classes="headingText" VerticalAlignment="Center">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{Binding Eyebrow}" Classes="eyebrow standardOnly"/>
+          <TextBlock Text="{Binding TheatreEyebrow}" Classes="theatreOnly theatreMicro" Foreground="{DynamicResource Cyan}"/>
+          <TextBlock Grid.Column="1" Text="{Binding OperationLabel}" Classes="theatreOnly theatreMicro" Foreground="{DynamicResource Muted}"/>
+        </Grid>
+        <TextBlock Text="{Binding Title}" Classes="h2 standardOnly"/>
+        <TextBlock Classes="theatreOnly featureTitle" TextWrapping="Wrap">
+          <Run Text="{Binding Title}"/><Run Text="." Foreground="{DynamicResource Accent}"/>
+        </TextBlock>
+        <TextBlock Text="{Binding Summary}" Classes="muted toolSummary" TextWrapping="Wrap"/>
       </StackPanel>
     </Grid>
 
     <!-- ========================================================= -->
     <!-- STAGE RAIL                                                -->
     <!-- ========================================================= -->
-    <Border Grid.Row="1" Background="{DynamicResource SurfaceHover}" CornerRadius="8"
+    <Border Grid.Row="1" Classes="standardOnly" Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius8}"
             BorderBrush="{DynamicResource Line}" BorderThickness="1"
             Padding="16,9" Margin="0,0,0,14">
       <StackPanel Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"
@@ -82,36 +216,71 @@
       </StackPanel>
     </Border>
 
+    <Grid Grid.Row="0" Classes="theatreOnly theatreStages" ColumnDefinitions="*,*,*">
+      <Border Classes="stageCell" Classes.current="{Binding IsExplain}">
+        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="01" Classes="theatreMicro"/><TextBlock Text="Explain" FontSize="13"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="1" Classes="stageCell" Classes.current="{Binding IsReview}">
+        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="02" Classes="theatreMicro"/><TextBlock Text="Review" FontSize="13"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="2" Classes="stageCell" Classes.current="{Binding IsResult}">
+        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="03" Classes="theatreMicro"/><TextBlock Text="Result" FontSize="13"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+
     <!-- ========================================================= -->
     <!-- STAGE BODY                                                -->
     <!-- ========================================================= -->
-    <Panel Grid.Row="2">
+    <Panel Grid.Row="2" Classes="toolBody">
 
       <!-- ===== EXPLAIN ===== -->
-      <ScrollViewer IsVisible="{Binding IsExplain}">
+      <Grid IsVisible="{Binding IsExplain}" RowDefinitions="*,Auto">
+       <ScrollViewer>
         <ItemsControl ItemsSource="{Binding Steps}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:StepRow">
-              <Grid ColumnDefinitions="Auto,*" Margin="0,0,4,14">
+              <Border Classes="stepRule">
+              <Grid ColumnDefinitions="Auto,*" Classes="stepRow">
                 <!-- Numbered disc. Fixed size and explicit centring so one- and
                      two-digit numbers sit on the same baseline. -->
-                <Border Width="24" Height="24" CornerRadius="12" Margin="0,1,13,0"
+                <Border Classes="standardOnly" Width="24" Height="24" CornerRadius="12" Margin="0,1,13,0"
                         Background="{DynamicResource Accent}" VerticalAlignment="Top">
                   <TextBlock Text="{Binding NumberText}" FontSize="12" FontWeight="Bold"
                              Foreground="{DynamicResource OnAccent}"
                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <StackPanel Grid.Column="1" Spacing="3">
-                  <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Bold"
+                <TextBlock Text="{Binding IndexText}" Classes="theatreOnly theatreMicro" Foreground="{DynamicResource Cyan}"
+                           Width="30" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                <StackPanel Grid.Column="1" Classes="standardOnly" Spacing="3">
+                  <TextBlock Text="{Binding Title}" Classes="stepTitle"
                              Foreground="{DynamicResource Text}" TextWrapping="Wrap"/>
                   <TextBlock Text="{Binding Detail}" FontSize="12" Classes="muted"
                              TextWrapping="Wrap" LineHeight="18"/>
                 </StackPanel>
+                <TextBlock Grid.Column="1" Classes="theatreOnly" FontSize="12" LineHeight="17" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Text}">
+                  <Run Text="{Binding Title}" FontWeight="Medium"/><Run Text=" — "/><Run Text="{Binding Detail}"/>
+                </TextBlock>
               </Grid>
+              </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </ScrollViewer>
+       </ScrollViewer>
+        <StackPanel Grid.Row="1" Classes="theatreOnly"><Border IsVisible="{Binding IsReadOnly}" Margin="0,24,0,0" Background="{DynamicResource SurfaceHover}" Padding="16,14">
+          <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding IsReadOnly}">
+            <PathIcon Data="{StaticResource IconEye}" Width="16" Height="16" Foreground="{DynamicResource Text}" Margin="0,0,12,0"/>
+            <TextBlock Grid.Column="1" Text="This is a read-only tool. It reports findings without changing your device."
+                       FontSize="11" Foreground="{DynamicResource Text}" TextWrapping="Wrap"/>
+          </Grid>
+        </Border></StackPanel>
+      </Grid>
 
       <!-- ===== REVIEW ===== -->
       <Grid IsVisible="{Binding IsReview}" RowDefinitions="Auto,Auto,Auto,*,Auto">
@@ -119,7 +288,7 @@
         <!-- Warning, for anything that restarts the shell or cannot be undone -->
         <Border Grid.Row="0" IsVisible="{Binding HasWarning}"
                 Background="{DynamicResource GoldMuted}" BorderBrush="{DynamicResource Gold}"
-                BorderThickness="1" CornerRadius="8" Padding="13,10" Margin="0,0,0,12">
+                BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}" Padding="13,10" Margin="0,0,0,12">
           <Grid ColumnDefinitions="Auto,*">
             <PathIcon Data="{StaticResource IconWarning}" Width="15" Height="15"
                       Foreground="{DynamicResource Gold}" VerticalAlignment="Top" Margin="0,1,11,0"/>
@@ -133,7 +302,7 @@
              put in front of you first. -->
         <Border Grid.Row="1" IsVisible="{Binding ShowElevationNotice}"
                 Background="{DynamicResource CyanMuted}" BorderBrush="{DynamicResource Cyan}"
-                BorderThickness="1" CornerRadius="8" Padding="13,10" Margin="0,0,0,12">
+                BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}" Padding="13,10" Margin="0,0,0,12">
           <Grid ColumnDefinitions="Auto,*">
             <PathIcon Data="{StaticResource IconPrivacy}" Width="15" Height="15"
                       Foreground="{DynamicResource Cyan}" VerticalAlignment="Top" Margin="0,1,11,0"/>
@@ -148,7 +317,7 @@
         <!-- Blocker: the tool cannot run here, and says exactly why -->
         <Border Grid.Row="2" IsVisible="{Binding HasBlocker}"
                 Background="{DynamicResource SurfaceHover}" BorderBrush="{DynamicResource LineBright}"
-                BorderThickness="1" CornerRadius="8" Padding="13,11" Margin="0,0,0,12">
+                BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}" Padding="13,11" Margin="0,0,0,12">
           <Grid ColumnDefinitions="Auto,*">
             <PathIcon Data="{StaticResource IconInfo}" Width="15" Height="15"
                       Foreground="{DynamicResource Muted}" VerticalAlignment="Top" Margin="0,1,11,0"/>
@@ -163,7 +332,7 @@
         <!-- What was found -->
         <Border Grid.Row="3" IsVisible="{Binding !HasBlocker}"
                 Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
-                BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+                BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}" ClipToBounds="True">
           <Grid RowDefinitions="Auto,*">
             <Border Grid.Row="0" Background="{DynamicResource SurfaceHover}" Padding="13,8"
                     BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
@@ -245,7 +414,7 @@
           </Grid>
 
           <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
-                  BorderThickness="1" CornerRadius="8" Padding="14,12">
+                  BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}" Padding="14,12">
             <ItemsControl ItemsSource="{Binding ResultLines}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="x:String">
@@ -262,7 +431,8 @@
     <!-- ========================================================= -->
     <!-- FOOTER — buttons change per stage                         -->
     <!-- ========================================================= -->
-    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Margin="0,18,0,0">
+    <Border Grid.Row="3" Classes="toolFooter">
+    <Grid ColumnDefinitions="Auto,*,Auto" Classes="footerActions">
 
       <Button Classes="Ghost" Command="{Binding BackCommand}" IsVisible="{Binding IsReview}"
               IsEnabled="{Binding !Running}">
@@ -272,6 +442,8 @@
         </StackPanel>
       </Button>
 
+      <TextBlock Grid.Column="1" Text="{Binding ActionNote}" Classes="theatreOnly theatreMicro" FontSize="8"
+                 Foreground="{DynamicResource Muted}" VerticalAlignment="Center" Margin="8,0,12,0" TextWrapping="Wrap"/>
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
         <!-- Explain -->
         <Button Classes="Ghost" Content="Close" Command="{Binding CloseCommand}"
@@ -279,8 +451,10 @@
         <Button Classes="Accent" Command="{Binding ContinueCommand}"
                 IsVisible="{Binding IsExplain}" IsDefault="True">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <TextBlock Text="Continue" VerticalAlignment="Center"/>
-            <PathIcon Data="{StaticResource IconChevronRight}" Width="10" Height="10" VerticalAlignment="Center"/>
+            <TextBlock Text="Continue" Classes="standardOnly" VerticalAlignment="Center"/>
+            <TextBlock Text="Continue to review" Classes="theatreOnly" VerticalAlignment="Center"/>
+            <PathIcon Classes="standardOnly" Data="{StaticResource IconChevronRight}" Width="10" Height="10" VerticalAlignment="Center"/>
+            <PathIcon Classes="theatreOnly" Data="{StaticResource IconArrowRight}" Width="16" Height="16" VerticalAlignment="Center" Margin="10,0,0,0"/>
           </StackPanel>
         </Button>
 
@@ -298,5 +472,8 @@
                 IsVisible="{Binding IsResult}" IsDefault="True" IsCancel="True"/>
       </StackPanel>
     </Grid>
-  </Grid>
+    </Border>
+      </Grid>
+    </Grid>
+  </Border>
 </Window>

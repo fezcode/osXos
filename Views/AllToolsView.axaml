@@ -1,11 +1,13 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:OsXos.ViewModels"
+             xmlns:services="using:OsXos.Services"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="880" d:DesignHeight="700"
              x:Class="OsXos.Views.AllToolsView"
-             x:DataType="vm:AllToolsViewModel">
+             x:DataType="vm:AllToolsViewModel"
+             Classes.theatre="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}">
   <UserControl.Styles>
     <!-- Rows are denser than category cards: this page is a checklist of every
          tool, and it has to read as one list rather than thirty separate panels. -->
@@ -13,7 +15,7 @@
       <Setter Property="Background" Value="{DynamicResource Surface}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius10}"/>
       <Setter Property="Padding" Value="12,10"/>
       <Setter Property="Margin" Value="0,0,0,6"/>
     </Style>
@@ -25,7 +27,7 @@
       <Setter Property="Opacity" Value="0.62"/>
     </Style>
     <Style Selector="Border.status">
-      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius5}"/>
       <Setter Property="Padding" Value="7,2"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
@@ -39,6 +41,66 @@
     <Style Selector="Border.status.busy">
       <Setter Property="Background" Value="{DynamicResource CyanMuted}"/>
     </Style>
+
+    <Style Selector="Border.batchHeader">
+      <Setter Property="Padding" Value="24,14"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="ItemsControl.batchGroups"><Setter Property="Margin" Value="24,16,24,18"/></Style>
+    <Style Selector="Border.batchFooter"><Setter Property="Padding" Value="24,12"/></Style>
+    <Style Selector="TextBlock.batchName"><Setter Property="FontWeight" Value="SemiBold"/></Style>
+    <Style Selector="TextBlock.batchEyebrow"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector=":is(UserControl).theatre Border.batchHeader">
+      <Setter Property="Padding" Value="38,34,38,26"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.batchHeaderIcon, :is(UserControl).theatre Border.batchIcon">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.batchEyebrow">
+      <Setter Property="IsVisible" Value="True"/>
+      <Setter Property="FontSize" Value="8"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+      <Setter Property="LetterSpacing" Value="0.5"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.batchHeader TextBlock.h1">
+      <Setter Property="FontSize" Value="36"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="-1.2"/>
+      <Setter Property="Margin" Value="0,10,0,16"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre ItemsControl.batchGroups">
+      <Setter Property="Margin" Value="38,6,38,30"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.row">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,14"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="MinHeight" Value="62"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.row.checked">
+      <Setter Property="Background" Value="{DynamicResource AccentMuted}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Cyan}"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.batchName">
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pill, :is(UserControl).theatre Border.status">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pill TextBlock">
+      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.batchFooter">
+      <Setter Property="Padding" Value="38,18"/>
+    </Style>
   </UserControl.Styles>
 
   <Panel>
@@ -47,20 +109,20 @@
       <!-- ========================================================= -->
       <!-- COMMAND BAR                                               -->
       <!-- ========================================================= -->
-      <Border Grid.Row="0"
+      <Border Grid.Row="0" Classes="batchHeader"
               Background="{DynamicResource BgTopBar}"
-              BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
-              Padding="24,14">
+              BorderBrush="{DynamicResource LineSubtle}">
         <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-          <Border Width="38" Height="38" CornerRadius="9" Margin="0,0,13,0"
+          <Border Classes="batchHeaderIcon" Width="38" Height="38" CornerRadius="{DynamicResource CornerRadius9}" Margin="0,0,13,0"
                   Background="{DynamicResource AccentMuted}"
                   BorderBrush="{DynamicResource Line}" BorderThickness="1">
             <PathIcon Data="{StaticResource IconViewGrid}" Width="17" Height="17" Foreground="{DynamicResource Accent}"/>
           </Border>
 
           <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="BATCH / REVIEW" Classes="batchEyebrow"/>
             <TextBlock Text="All Tools" Classes="h1"/>
-            <TextBlock FontSize="12" Classes="muted">
+            <TextBlock FontSize="12" Classes="muted" TextWrapping="Wrap">
               <Run Text="{Binding CountText}"/><Run Text=" · "/><Run Text="{Binding OsName}"/><Run Text=" · tick what you want, then Run selected"/>
             </TextBlock>
           </StackPanel>
@@ -85,7 +147,7 @@
       <!-- EVERY TOOL, BY CATEGORY                                   -->
       <!-- ========================================================= -->
       <ScrollViewer Grid.Row="1">
-        <ItemsControl ItemsSource="{Binding Groups}" Margin="24,16,24,18">
+        <ItemsControl Classes="batchGroups" ItemsSource="{Binding Groups}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:BatchGroupViewModel">
               <StackPanel Margin="0,0,0,14">
@@ -102,7 +164,7 @@
                           <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsSelectable}"
                                     VerticalAlignment="Center" Margin="0,0,6,0" MinWidth="0"/>
 
-                          <Border Grid.Column="1" Width="30" Height="30" CornerRadius="8" Margin="0,0,12,0"
+                          <Border Grid.Column="1" Classes="batchIcon" Width="30" Height="30" CornerRadius="{DynamicResource CornerRadius8}" Margin="0,0,12,0"
                                   Background="{DynamicResource SurfaceHover}"
                                   BorderBrush="{DynamicResource Line}" BorderThickness="1" VerticalAlignment="Center">
                             <PathIcon Data="{Binding Icon}" Width="13" Height="13" Foreground="{DynamicResource Accent}"/>
@@ -110,7 +172,7 @@
 
                           <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="7">
-                              <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                              <TextBlock Classes="batchName" Text="{Binding Name}" FontSize="13"
                                          Foreground="{DynamicResource Text}" VerticalAlignment="Center"/>
                               <Border Classes="pill" Classes.on="{Binding State.IsOn}" Classes.partial="{Binding State.IsPartial}"
                                       Classes.unavailable="{Binding State.IsUnavailable}"
@@ -158,8 +220,8 @@
       <!-- ========================================================= -->
       <!-- SELECTION BAR                                             -->
       <!-- ========================================================= -->
-      <Border Grid.Row="2" Background="{DynamicResource BgTopBar}"
-              BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,1,0,0" Padding="24,12">
+      <Border Grid.Row="2" Classes="batchFooter" Background="{DynamicResource BgTopBar}"
+              BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,1,0,0">
         <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
           <StackPanel Spacing="2" VerticalAlignment="Center">
             <TextBlock Text="{Binding SelectionText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource Text}"/>
@@ -189,7 +251,7 @@
     <!-- CONFIRM                                                   -->
     <!-- ========================================================= -->
     <Border IsVisible="{Binding ShowConfirm}" Background="#80000000">
-      <Border Width="480" MaxHeight="560" Background="{DynamicResource BgElevated}" CornerRadius="12"
+      <Border Width="480" MaxHeight="560" Background="{DynamicResource BgElevated}" CornerRadius="{DynamicResource CornerRadius12}"
               BorderBrush="{DynamicResource LineBright}" BorderThickness="1"
               BoxShadow="0 16 48 #66000000" Padding="24"
               HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -229,7 +291,7 @@
     <!-- RUN REPORT                                                -->
     <!-- ========================================================= -->
     <Border IsVisible="{Binding ShowReport}" Background="#80000000">
-      <Border Width="600" MaxHeight="640" Background="{DynamicResource BgElevated}" CornerRadius="12"
+      <Border Width="600" MaxHeight="640" Background="{DynamicResource BgElevated}" CornerRadius="{DynamicResource CornerRadius12}"
               BorderBrush="{DynamicResource LineBright}" BorderThickness="1"
               BoxShadow="0 16 48 #66000000" Padding="24"
               HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -243,7 +305,7 @@
                 <DataTemplate x:DataType="vm:BatchReportRow">
                   <Border Classes="row" Padding="12,10">
                     <Grid ColumnDefinitions="Auto,*,Auto">
-                      <Border Width="28" Height="28" CornerRadius="7" Margin="0,0,12,0" VerticalAlignment="Top"
+                      <Border Width="28" Height="28" CornerRadius="{DynamicResource CornerRadius7}" Margin="0,0,12,0" VerticalAlignment="Top"
                               Background="{DynamicResource SurfaceHover}"
                               BorderBrush="{DynamicResource Line}" BorderThickness="1">
                         <PathIcon Data="{Binding Icon}" Width="12" Height="12" Foreground="{DynamicResource Accent}"/>

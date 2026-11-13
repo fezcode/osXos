@@ -38,22 +38,41 @@ function Invoke-Tests {
     }
 }
 
-function Get-PubDir([string] $rid) { Join-Path $PSScriptRoot "dist\$rid" }
+function Get-PubDir([string] $rid) {
+    $distRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'dist'))
+    $pubDir = [System.IO.Path]::GetFullPath((Join-Path $distRoot $rid))
+    if (-not [string]::Equals((Split-Path $pubDir -Parent), $distRoot, [StringComparison]::OrdinalIgnoreCase) -or
+        -not [string]::Equals((Split-Path $pubDir -Leaf), $rid, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Publish directory must be the selected RID directly under $distRoot."
+    }
+    foreach ($path in @($distRoot, $pubDir)) {
+        if ((Test-Path -LiteralPath $path) -and
+            ((Get-Item -LiteralPath $path -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Refusing to publish through a linked output directory: $path"
+        }
+    }
+    $pubDir
+}
 
 function Invoke-Publish([string] $rid) {
+    $pubDir = Get-PubDir $rid
     # Publish cannot overwrite a running exe; it fails part-way and leaves a stale
-    # binary behind that looks like a successful build.
-    $running = Get-Process -Name osXos -ErrorAction SilentlyContinue
+    # binary behind that looks like a successful build. Installed copies and other
+    # output directories belong to the user, so stop only this selected payload.
+    $outputPrefix = $pubDir + [System.IO.Path]::DirectorySeparatorChar
+    $running = @(Get-Process -Name osXos -ErrorAction SilentlyContinue | Where-Object {
+        $exePath = $_.Path
+        $exePath -and [System.IO.Path]::GetFullPath($exePath).StartsWith($outputPrefix, [StringComparison]::OrdinalIgnoreCase)
+    })
     if ($running) {
-        Write-Host "Stopping $($running.Count) running osXos instance(s)..." -ForegroundColor Yellow
+        Write-Host "Stopping $($running.Count) osXos instance(s) running from $pubDir..." -ForegroundColor Yellow
         $running | Stop-Process -Force
         Start-Sleep -Milliseconds 500
     }
 
-    $pubDir = Get-PubDir $rid
-    if (Test-Path $pubDir) {
+    if (Test-Path -LiteralPath $pubDir) {
         Write-Host "Clearing $pubDir ..." -ForegroundColor Cyan
-        Remove-Item $pubDir -Recurse -Force
+        Remove-Item -LiteralPath $pubDir -Recurse -Force
     }
 
     # Published as a normal folder of assemblies rather than one packed exe. A

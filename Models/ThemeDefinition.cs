@@ -36,10 +36,18 @@ public sealed record ThemeDefinition(
     // Accent for marks drawn on the sidebar — the brand cog, the selected-nav bar.
     // Normally the same highlight used elsewhere, but a palette whose sidebar IS its
     // accent would render those invisible, so it can name a contrasting one instead.
-    string? SidebarAccent = null)
+    string? SidebarAccent = null,
+    // A solid selected row needs its own ink instead of the translucent white
+    // treatment used by the other palettes.
+    string? SidebarSelection = null,
+    string? OnSidebarSelection = null,
+    string? SidebarText = null,
+    string? SidebarMuted = null,
+    string? SidebarSubtle = null,
+    bool SquareCorners = false)
 {
     public IBrush PrimaryBrush => new SolidColorBrush(Color.Parse(BgSidebar));
-    public IBrush SecondaryBrush => new SolidColorBrush(Color.Parse(Cyan));
+    public IBrush SecondaryBrush => new SolidColorBrush(Color.Parse(SidebarSelection ?? Cyan));
     public IBrush BackgroundBrush => new SolidColorBrush(Color.Parse(Bg0));
     public IBrush TextBrush => new SolidColorBrush(Color.Parse(Text));
 }
@@ -246,6 +254,39 @@ public static class ThemeCatalog
             // The sidebar is the accent here, so the brand mark and the selected-nav
             // bar would disappear into it. They go white instead.
             SidebarAccent: "#FFFFFF"
+        ),
+
+        new(
+            Key: "operation-theatre",
+            Name: "Operation Theatre",
+            Description: "Cobalt blue, electric lime and warm paper with crisp square edges",
+            PaletteLabel: "OPERATION THEATRE",
+            Bg0: "#F4F5F0",
+            BgSidebar: "#1024AD",
+            BgTopBar: "#F4F5F0",
+            BgElevated: "#FBFBF6",
+            Surface: "#F4F5F0",
+            SurfaceHover: "#E7E9DD",
+            SurfaceActive: "#DDE2EB",
+            Line: "#D3D8DD",
+            LineBright: "#B8C2D6",
+            LineSubtle: "#E0E4EA",
+            Text: "#10234C",
+            Muted: "#5E6E8F",
+            Dim: "#7A87A0",
+            Accent: "#2449E8",
+            AccentHover: "#1837D6",
+            Cyan: "#2449E8",
+            Gold: "#946010",
+            Green: "#2C7548",
+            Red: "#BD2F42",
+            SidebarAccent: "#C5E82F",
+            SidebarSelection: "#C5E82F",
+            OnSidebarSelection: "#10234C",
+            SidebarText: "#EEF0FF",
+            SidebarMuted: "#BBC5FF",
+            SidebarSubtle: "#BBC5FF",
+            SquareCorners: true
         ),
 
         // ---- dark palettes ----

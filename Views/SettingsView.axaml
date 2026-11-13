@@ -1,17 +1,110 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:OsXos.ViewModels"
+             xmlns:services="using:OsXos.Services"
              xmlns:models="using:OsXos.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
              x:Class="OsXos.Views.SettingsView"
-             x:DataType="vm:SettingsViewModel">
+             x:DataType="vm:SettingsViewModel"
+             Classes.theatre="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}">
   <UserControl.Styles>
+    <Style Selector="Border.settingsHeader">
+      <Setter Property="Padding" Value="24,14"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="StackPanel.settingsStream">
+      <Setter Property="Margin" Value="24,18,24,20"/>
+      <Setter Property="Spacing" Value="14"/>
+    </Style>
+    <Style Selector="TextBlock.theatreEyebrow"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector="Border.themeCard">
+      <Setter Property="Padding" Value="12"/>
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="Border.paletteLabel">
+      <Setter Property="Background" Value="{DynamicResource Surface}"/>
+      <Setter Property="Padding" Value="6,2"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="TextBlock.paletteName"><Setter Property="FontWeight" Value="Bold"/></Style>
+    <Style Selector="Border.dataPanel">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+      <Setter Property="Padding" Value="12,10"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.settingsHeader">
+      <Setter Property="Padding" Value="38,34,38,26"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.h1">
+      <Setter Property="FontSize" Value="36"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="-1.2"/>
+      <Setter Property="Margin" Value="0,10,0,16"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.theatreEyebrow">
+      <Setter Property="IsVisible" Value="True"/>
+      <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontSize" Value="8"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="0.5"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre StackPanel.settingsStream">
+      <Setter Property="Margin" Value="38,0,38,34"/>
+      <Setter Property="Spacing" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.settingsSection">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,24,0,28"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.eyebrow">
+      <Setter Property="FontSize" Value="8"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="0.6"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.h3">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.themeCard">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,16,0,12"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre ListBox.themeList ListBoxItem:selected Border.themeCard">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+      <Setter Property="BorderThickness" Value="0,2,0,0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.paletteLabel">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.paletteName"><Setter Property="FontWeight" Value="Normal"/></Style>
+    <Style Selector=":is(UserControl).theatre Border.paletteLabel TextBlock">
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.dataPanel">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,1,0,1"/>
+      <Setter Property="Padding" Value="0,12"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.unsavedExplanation">
+      <Setter Property="MaxWidth" Value="220"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
     <Style Selector="ListBox.themeList ListBoxItem">
       <Setter Property="Padding" Value="0"/>
       <Setter Property="Margin" Value="4,4,8,8"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius10}"/>
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
@@ -29,7 +122,7 @@
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource CornerRadius6}"/>
       <Setter Property="Padding" Value="14,6"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
@@ -56,15 +149,15 @@
     <!-- ========================================================= -->
     <!-- FLUENT COMMAND BAR                                        -->
     <!-- ========================================================= -->
-    <Border Grid.Row="0"
+    <Border Grid.Row="0" Classes="settingsHeader"
             Background="{DynamicResource BgTopBar}"
-            BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
-            Padding="24,14">
+            BorderBrush="{DynamicResource LineSubtle}">
       <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
         <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="PREFERENCES" Classes="theatreEyebrow"/>
           <TextBlock Text="Settings" Classes="h1" VerticalAlignment="Center"/>
           <TextBlock Text="Theme appearance, font typography, how tool windows open, and where osXos keeps its data."
-                     FontSize="12" Classes="muted"/>
+                     FontSize="12" Classes="muted" TextWrapping="Wrap"/>
         </StackPanel>
 
         <Button Grid.Column="1" Classes="Modern" Command="{Binding CancelCommand}"
@@ -86,18 +179,18 @@
     <!-- SETTINGS PANELS STREAM                                    -->
     <!-- ========================================================= -->
     <ScrollViewer Grid.Row="1">
-      <StackPanel Margin="24,18,24,20" Spacing="14" MaxWidth="840" HorizontalAlignment="Left">
+      <StackPanel Classes="settingsStream" MaxWidth="840" HorizontalAlignment="Left">
 
         <!-- UNSAVED CHANGES WARNING BANNER -->
         <Border IsVisible="{Binding IsDirty}" Background="{DynamicResource GoldMuted}"
-                BorderBrush="{DynamicResource Gold}" BorderThickness="1" CornerRadius="8"
+                BorderBrush="{DynamicResource Gold}" BorderThickness="1" CornerRadius="{DynamicResource CornerRadius8}"
                 Padding="14,10" Margin="0,0,0,4">
           <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <Ellipse Width="8" Height="8" Fill="{DynamicResource Gold}" VerticalAlignment="Center"/>
-              <TextBlock Text="Unsaved Changes" FontWeight="Bold" FontSize="13" Classes="gold" VerticalAlignment="Center"/>
-              <TextBlock Text="— You have modified settings that are not saved yet." FontSize="12" Classes="muted" VerticalAlignment="Center"/>
-            </StackPanel>
+            <Grid ColumnDefinitions="Auto,Auto,*" VerticalAlignment="Center" Margin="0,0,12,0">
+              <Ellipse Width="8" Height="8" Fill="{DynamicResource Gold}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <TextBlock Grid.Column="1" Text="Unsaved Changes" FontWeight="Bold" FontSize="13" Classes="gold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <TextBlock Grid.Column="2" Text="You have modified settings that are not saved yet." FontSize="12" Classes="muted unsavedExplanation" VerticalAlignment="Center" TextWrapping="Wrap"/>
+            </Grid>
 
             <Button Grid.Column="1" Classes="Modern" Command="{Binding CancelCommand}" Margin="0,0,8,0" Padding="12,6">
               <TextBlock Text="Discard" FontSize="12"/>
@@ -111,17 +204,17 @@
 
         <!-- STATUS LINE -->
         <Border IsVisible="{Binding HasStatus}" Background="{DynamicResource SurfaceHover}"
-                BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="6"
+                BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="{DynamicResource CornerRadius6}"
                 Padding="12,8">
           <TextBlock Text="{Binding Status}" FontSize="12" Classes="muted" TextWrapping="Wrap"/>
         </Border>
 
         <!-- CARD 0: APPEARANCE & THEME PALETTES -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="14">
             <StackPanel Spacing="2">
               <TextBlock Text="APPEARANCE &amp; PALETTES" Classes="eyebrow"/>
-              <TextBlock Text="Nature Landscape Theme &amp; Color Scheme" Classes="h3"/>
+              <TextBlock Text="Theme &amp; Color Scheme" Classes="h3"/>
             </StackPanel>
 
             <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
@@ -131,7 +224,7 @@
                            FontSize="11" Classes="muted" TextWrapping="Wrap"/>
               </StackPanel>
 
-              <Border Grid.Column="1" Background="{DynamicResource SurfaceHover}" CornerRadius="8" Padding="3"
+              <Border Grid.Column="1" Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius8}" Padding="3"
                       BorderBrush="{DynamicResource Line}" BorderThickness="1" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="2">
                   <Button Classes="segment" Classes.on="{Binding IsLightMode}" Command="{Binding UseLightModeCommand}">
@@ -167,13 +260,12 @@
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:ThemeDefinition">
-                  <Border Classes="themeCard" Width="240" Padding="12" CornerRadius="10"
-                          Background="{DynamicResource SurfaceHover}"
-                          BorderBrush="{DynamicResource Line}" BorderThickness="1">
+                  <Border Classes="themeCard" Width="240" CornerRadius="{DynamicResource CornerRadius10}"
+                          BorderBrush="{DynamicResource Line}">
                     <StackPanel Spacing="8">
                       <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource Surface}" CornerRadius="4" Padding="6,2"
-                                BorderBrush="{DynamicResource Line}" BorderThickness="1" HorizontalAlignment="Left">
+                        <Border Classes="paletteLabel" CornerRadius="{DynamicResource CornerRadius4}"
+                                BorderBrush="{DynamicResource Line}" HorizontalAlignment="Left">
                           <TextBlock Text="{Binding PaletteLabel}" FontSize="10" FontWeight="Bold" Classes="muted"/>
                         </Border>
 
@@ -187,7 +279,7 @@
                         </StackPanel>
                       </Grid>
 
-                      <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource Text}"/>
+                      <TextBlock Classes="paletteName" Text="{Binding Name}" FontSize="13" Foreground="{DynamicResource Text}"/>
                       <TextBlock Text="{Binding Description}" FontSize="11" Classes="muted" TextWrapping="Wrap" MaxLines="2"/>
                     </StackPanel>
                   </Border>
@@ -198,7 +290,7 @@
         </Border>
 
         <!-- CARD 1: TYPOGRAPHY & FONT RENDERING -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="12">
             <StackPanel Spacing="2">
               <TextBlock Text="TYPOGRAPHY &amp; FONTS" Classes="eyebrow"/>
@@ -223,7 +315,7 @@
         </Border>
 
         <!-- CARD 2: BEHAVIOUR -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="12">
             <StackPanel Spacing="2">
               <TextBlock Text="BEHAVIOUR" Classes="eyebrow"/>
@@ -239,7 +331,7 @@
         </Border>
 
         <!-- CARD 3: MENU BAR -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="12">
             <StackPanel Spacing="2">
               <TextBlock Text="MENU BAR" Classes="eyebrow"/>
@@ -254,7 +346,7 @@
         </Border>
 
         <!-- CARD 4: LOCAL DATA -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="12">
             <StackPanel Spacing="2">
               <TextBlock Text="LOCAL DATA" Classes="eyebrow"/>
@@ -264,8 +356,8 @@
             <TextBlock TextWrapping="Wrap" FontSize="12" Classes="muted"
                        Text="Your theme, font and behaviour choices live in this folder, as plain JSON you can read and edit. osXos stores nothing anywhere else and sends nothing anywhere."/>
 
-            <Border Background="{DynamicResource SurfaceHover}" CornerRadius="6" Padding="12,10"
-                    BorderBrush="{DynamicResource Line}" BorderThickness="1">
+            <Border Classes="dataPanel" CornerRadius="{DynamicResource CornerRadius6}"
+                    BorderBrush="{DynamicResource Line}">
               <StackPanel Spacing="8">
                 <SelectableTextBlock Text="{Binding SettingsFilePath}" Classes="mono" FontSize="12"
                                      TextWrapping="Wrap"/>
@@ -290,7 +382,7 @@
         </Border>
 
         <!-- CARD 5: ABOUT THIS BUILD -->
-        <Border Classes="card">
+        <Border Classes="card settingsSection">
           <StackPanel Spacing="10">
             <StackPanel Spacing="2">
               <TextBlock Text="BUILD" Classes="eyebrow"/>

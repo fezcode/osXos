@@ -10,7 +10,7 @@
 
 [app]
 name    = "osXos"
-version = "0.2.6"
+version = "0.2.7"
 id      = "com.fezcode.osxos"
 icon    = "Assets/icon.ico"
 
@@ -39,7 +39,7 @@ settings_dirs = ["${APPDATA}/fezcode/osxos"]
 [[steps]]
 type  = "welcome"
 title = "osXos ${app.version}"
-body  = "This wizard will install osXos ${app.version} on your computer.\n\nosXos collects the small maintenance jobs you would otherwise do from a terminal -- clearing the icon cache, emptying the temp folder, flushing DNS -- and gives each one a window that explains exactly what it will do before it does it.\n\nEvery tool runs inside your own user account. osXos never asks for administrator rights.\n\nClick Next to continue."
+body  = "This wizard will install osXos ${app.version} on your computer.\n\nosXos collects the small maintenance jobs you would otherwise do from a terminal -- clearing the icon cache, emptying the temp folder, flushing DNS -- and gives each one a window that explains exactly what it will do before it does it.\n\nMost tools work inside your own user account. Tools that need administrator rights say so on Review before the operating system asks.\n\nClick Next to continue."
 
 [[steps]]
 type  = "license"
@@ -108,4 +108,4 @@ data  = "${INSTALLDIR}"
 hive  = "HKCU"
 key   = "Software\\Fezcode\\osXos"
 value = "Version"
-data  = "0.2.6"
+data  = "0.2.7"

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using Avalonia.ReactiveUI;
 using OsXos;
 using OsXos.Menus;
 using OsXos.Models;
@@ -30,7 +31,12 @@ static class Program
             .UseSkia()
             .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
             .WithInterFont()
-            .AfterSetup(_ => Capture())
+            .UseReactiveUI()
+            .AfterSetup(_ =>
+            {
+                if (args.Contains("--operation-theatre")) CaptureOperationTheatre();
+                else Capture();
+            })
             .SetupWithoutStarting();
 
         Console.WriteLine($"shots written to {OutDir}");
@@ -41,7 +47,7 @@ static class Program
         var services = new AppServices();
 
         // Every palette, on the page with the most surface types on it.
-        foreach (var theme in new[] { "default", "harbor-night", "blueprint", "orchid-dusk" })
+        foreach (var theme in new[] { "default", "harbor-night", "blueprint", "orchid-dusk", "operation-theatre" })
         {
             // The view model has to be built first: SettingsViewModel's constructor
             // applies the saved theme, so applying one before this would be undone.
@@ -135,6 +141,7 @@ static class Program
         {
             try { Directory.Delete(modeDir, recursive: true); } catch { }
         }
+        CaptureOperationTheatre();
         ThemeManager.ApplyTheme(ThemeCatalog.FindTheme("default"));
 
         var aboutVm = new MainWindowViewModel(services);
@@ -186,6 +193,109 @@ static class Program
         Shoot("tool-blocked", new ToolWindow { DataContext = blocked }, 660, 580);
     }
 
+    static void CaptureOperationTheatre()
+    {
+        // Exercise the real picker and live resource changes without touching the
+        // user's saved appearance. PATH inspection and reporting are read-only.
+        var dataDir = Path.Combine(Path.GetTempPath(), "osxos-shots-" + Guid.NewGuid().ToString("N"));
+        MainWindow? main = null;
+        ToolWindow? toolWindow = null;
+        try
+        {
+            var services = new AppServices(dataDir);
+            var vm = new MainWindowViewModel(services);
+            vm.Settings.SelectedTheme = ThemeCatalog.FindTheme("operation-theatre");
+            vm.SelectedNav = vm.NavItems.First(n => n.Name == "Developer");
+            main = new MainWindow { DataContext = vm };
+            Shoot("operation-theatre-developer", main, 1180, 760, close: false);
+
+            vm.SelectedNav = vm.NavItems[^1];
+            Shoot("operation-theatre-settings", main, 1180, 1000, close: false);
+            Shoot("operation-theatre-settings-minimum", main, 920, 600, close: false);
+
+            // Save only to this harness's temporary directory so leaving Settings
+            // exercises normal navigation rather than the unsaved-changes prompt.
+            vm.Settings.Save();
+            vm.SelectedNav = vm.NavItems.First(n => n.Vm is AllToolsViewModel);
+            Shoot("operation-theatre-all-tools", main, 1180, 760, close: false);
+            vm.OpenAboutCommand.Execute().Subscribe();
+            Shoot("operation-theatre-about", main, 1180, 760, close: false);
+            vm.CloseAboutCommand.Execute().Subscribe();
+
+            var path = services.Tools.Tools.First(t => t.Id == "windows.path-health");
+            var toolVm = new ToolWindowViewModel(path, services.OS, alwaysExplain: true);
+            toolWindow = new ToolWindow { DataContext = toolVm };
+            Shoot("operation-theatre-tool-explain", toolWindow, 1180, 680, close: false);
+            while (toolVm.Inspecting) Pump();
+            if (!toolVm.CanRun)
+                throw new InvalidOperationException("PATH report could not be inspected: " + toolVm.Blocker);
+            toolVm.ContinueCommand.Execute().Subscribe();
+            Shoot("operation-theatre-tool-review", toolWindow, 1180, 680, close: false);
+
+            var complete = false;
+            Exception? error = null;
+            using var run = toolVm.RunCommand.Execute().Subscribe(
+                _ => { },
+                ex => { error = ex; complete = true; },
+                () => complete = true);
+            while (!complete) Pump();
+            if (error != null) throw new InvalidOperationException("PATH report did not finish.", error);
+            if (!toolVm.IsResult) throw new InvalidOperationException("PATH report did not reach Result.");
+            Shoot("operation-theatre-tool-result", toolWindow, 1180, 680);
+            toolWindow = null;
+
+            // These previews cover dense and exceptional layouts without running
+            // a destructive tool or requesting administrator rights.
+            var elevatedVm = new ToolWindowViewModel(new ElevatedStub(), services.OS, alwaysExplain: true);
+            toolWindow = new ToolWindow { DataContext = elevatedVm };
+            Shoot("operation-theatre-tool-minimum", toolWindow, 920, 600, close: false);
+            while (elevatedVm.Inspecting) Pump();
+            elevatedVm.ContinueCommand.Execute().Subscribe();
+            Shoot("operation-theatre-tool-administrator", toolWindow, 1180, 680);
+            toolWindow = null;
+
+            var blockedVm = new ToolWindowViewModel(new BlockedStub(), services.OS, alwaysExplain: false);
+            while (blockedVm.Inspecting) Pump();
+            Shoot("operation-theatre-tool-blocked", new ToolWindow { DataContext = blockedVm }, 1180, 680);
+
+            var bigVm = new ToolWindowViewModel(new BigStub(40000), services.OS, alwaysExplain: false);
+            while (bigVm.Inspecting) Pump();
+            Shoot("operation-theatre-tool-bigsweep", new ToolWindow { DataContext = bigVm }, 1180, 680);
+
+            // Keep a tool window alive across the theme change as well: its
+            // compact chrome and original stage layout must be restored in place.
+            toolWindow = new ToolWindow
+            {
+                DataContext = new ToolWindowViewModel(path, services.OS, alwaysExplain: true),
+            };
+            toolWindow.Show();
+            Pump();
+            vm.Settings.SelectedTheme = ThemeCatalog.FindTheme("default");
+            Shoot("operation-theatre-tool-restored-default", toolWindow, 660, 580);
+            toolWindow = null;
+
+            // Keep the same window alive: colors, selected-row ink and rounded
+            // corners must restore when the picker leaves Operation Theatre.
+            vm.SelectedNav = vm.NavItems.First(n => n.Name == "Developer");
+            vm.Settings.SelectedTheme = ThemeCatalog.FindTheme("blueprint");
+            Shoot("operation-theatre-restored-blueprint", main, 1180, 760, close: false);
+            vm.Settings.IsDarkMode = true;
+            vm.Settings.SelectedTheme = ThemeCatalog.FindTheme("harbor-night");
+            Shoot("operation-theatre-restored-harbor-night", main, 1180, 760, close: false);
+            vm.Settings.IsDarkMode = false;
+            vm.Settings.SelectedTheme = ThemeCatalog.FindTheme("default");
+            Shoot("operation-theatre-restored-default", main, 1180, 760);
+            main = null;
+        }
+        finally
+        {
+            toolWindow?.Close();
+            main?.Close();
+            try { Directory.Delete(dataDir, recursive: true); } catch { }
+            ThemeManager.ApplyTheme(ThemeCatalog.FindTheme("default"));
+        }
+    }
+
     static void DumpNativeMenu(AppServices services)
     {
         var vm = new MainWindowViewModel(services);
@@ -219,22 +329,25 @@ static class Program
         for (var i = 0; i < 40; i++)
         {
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            // Headless has no render loop. Tick it while time advances so live
+            // palette transitions settle before the frame is captured.
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick(1);
             Thread.Sleep(15);
         }
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
     }
 
-    static void Shoot(string name, Window window, int width, int height)
+    static void Shoot(string name, Window window, int width, int height, bool close = true)
     {
         window.Width = width;
         window.Height = height;
-        window.Show();
+        if (!window.IsVisible) window.Show();
         Pump();
 
         var frame = window.CaptureRenderedFrame();
         var path = Path.Combine(OutDir, name + ".png");
         using (var stream = File.Create(path)) frame?.Save(stream);
-        window.Close();
+        if (close) window.Close();
 
         Console.WriteLine($"  {name}.png");
     }
@@ -340,6 +453,36 @@ static class Program
 
         public Task<ToolResult> RunAsync(ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null) =>
             Task.FromResult(_result);
+    }
+
+    /// <summary>A long title plus warning and elevation notices; never run.</summary>
+    sealed class ElevatedStub : ITool
+    {
+        public string Id => "stub.elevated";
+        public OSKind Platform => OSKind.Windows;
+        public ToolCategory Category => ToolCategory.Maintenance;
+        public string Name => "Clear Windows Update Download Cache and Restart Services";
+        public string Summary => "Remove downloaded update files after temporarily stopping the services that own them.";
+        public string IconKey => "IconDownload";
+        public string? Warning => "Windows Update services are stopped for the cleanup and restarted afterward. Finish any update already in progress first.";
+        public bool IsDestructive => true;
+        public bool RequiresElevation => true;
+        public IReadOnlyList<ToolStep> Steps { get; } = new ToolStep[]
+        {
+            new("Review the update download cache", "The preview lists only downloaded update payloads and their sizes."),
+            new("Stop the services that hold these files", "The Review stage says administrator rights are required before Windows shows a prompt."),
+            new("Remove the reviewed files and restart services", "Only the files shown in Review are passed to the run; personal files and settings stay in place."),
+        };
+
+        public Task<ToolPreview> InspectAsync(CancellationToken ct) => Task.FromResult(
+            new ToolPreview(new[]
+            {
+                new PreviewItem("Downloaded update payload", @"C:\Windows\SoftwareDistribution\Download\payload", 734003200),
+            }, "1 download location · 700 MB to reclaim"));
+
+        public Task<ToolResult> RunAsync(
+            ToolPreview preview, CancellationToken ct, IProgress<ToolProgress>? progress = null) =>
+            throw new NotSupportedException("This screenshot stub must never run.");
     }
 
     sealed class BlockedStub : ITool

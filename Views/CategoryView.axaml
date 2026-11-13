@@ -1,37 +1,139 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:OsXos.ViewModels"
+             xmlns:services="using:OsXos.Services"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="880" d:DesignHeight="700"
              x:Class="OsXos.Views.CategoryView"
-             x:DataType="vm:CategoryViewModel">
+             x:DataType="vm:CategoryViewModel"
+             Classes.theatre="{ReflectionBinding IsTheatre, Source={x:Static services:ThemeManager.Appearance}}">
+
+  <UserControl.Styles>
+    <!-- Existing palettes keep their card layout; Theatre uses a ruled instrument list. -->
+    <Style Selector="Border.pageHeader">
+      <Setter Property="Padding" Value="24,14"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="ItemsControl.toolList">
+      <Setter Property="Margin" Value="24,18,24,22"/>
+    </Style>
+    <Style Selector="Button.toolRow">
+      <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+    <Style Selector="TextBlock.toolName"><Setter Property="FontWeight" Value="Bold"/></Style>
+    <Style Selector="StackPanel.toolCopy"><Setter Property="Spacing" Value="3"/></Style>
+    <Style Selector=":is(UserControl).theatre StackPanel.toolCopy"><Setter Property="Spacing" Value="6"/></Style>
+    <Style Selector="Border.elevationBadge">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+      <Setter Property="Padding" Value="9,4"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="Border.elevationBadge TextBlock"><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+    <Style Selector="Border.toolCard">
+      <Setter Property="Padding" Value="16,14"/>
+    </Style>
+    <Style Selector="TextBlock.toolNumber, TextBlock.theatreArrow, TextBlock.theatreEyebrow">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pageHeader">
+      <Setter Property="Padding" Value="38,34,38,26"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="{DynamicResource Bg0}"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pageIcon, :is(UserControl).theatre Border.toolIcon">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.h1">
+      <Setter Property="FontSize" Value="36"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="LetterSpacing" Value="-1.2"/>
+      <Setter Property="Margin" Value="0,10,0,16"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.theatreEyebrow">
+      <Setter Property="IsVisible" Value="True"/>
+      <Setter Property="FontSize" Value="8"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="LetterSpacing" Value="0.5"/>
+      <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre ItemsControl.toolList">
+      <Setter Property="Margin" Value="38,0,38,30"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Button.toolRow">
+      <Setter Property="Margin" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.toolCard">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,22"/>
+      <Setter Property="MinHeight" Value="82"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Button.toolRow:pointerover Border.toolCard">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.toolNumber">
+      <Setter Property="IsVisible" Value="True"/>
+      <Setter Property="Width" Value="30"/>
+      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="Foreground" Value="{DynamicResource Cyan}"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+      <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.toolName">
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pill, :is(UserControl).theatre Border.stepBadge, :is(UserControl).theatre Border.elevationBadge">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.pill TextBlock, :is(UserControl).theatre Border.stepBadge TextBlock, :is(UserControl).theatre Border.elevationBadge TextBlock">
+      <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="FontSize" Value="9"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre Border.stepBadge, :is(UserControl).theatre PathIcon.rowChevron">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector=":is(UserControl).theatre TextBlock.theatreArrow">
+      <Setter Property="IsVisible" Value="True"/>
+      <Setter Property="FontSize" Value="19"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="Margin" Value="20,0,0,0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*">
 
     <!-- ========================================================= -->
     <!-- COMMAND BAR                                               -->
     <!-- ========================================================= -->
-    <Border Grid.Row="0"
+    <Border Grid.Row="0" Classes="pageHeader"
             Background="{DynamicResource BgTopBar}"
-            BorderBrush="{DynamicResource LineSubtle}" BorderThickness="0,0,0,1"
-            Padding="24,14">
+            BorderBrush="{DynamicResource LineSubtle}">
       <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-        <Border Width="38" Height="38" CornerRadius="9" Margin="0,0,13,0"
+        <Border Classes="pageIcon" Width="38" Height="38" CornerRadius="{DynamicResource CornerRadius9}" Margin="0,0,13,0"
                 Background="{DynamicResource AccentMuted}"
                 BorderBrush="{DynamicResource Line}" BorderThickness="1">
           <PathIcon Data="{Binding Icon}" Width="17" Height="17" Foreground="{DynamicResource Accent}"/>
         </Border>
 
         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="SELECT AN INSTRUMENT" Classes="theatreEyebrow"/>
           <TextBlock Text="{Binding Name}" Classes="h1"/>
           <TextBlock FontSize="12" Classes="muted">
             <Run Text="{Binding CountText}"/><Run Text=" · "/><Run Text="{Binding OsName}"/>
           </TextBlock>
         </StackPanel>
 
-        <Border Grid.Column="2" Background="{DynamicResource SurfaceHover}" CornerRadius="6"
-                Padding="9,4" BorderBrush="{DynamicResource Line}" BorderThickness="1"
+        <Border Grid.Column="2" Classes="elevationBadge" CornerRadius="{DynamicResource CornerRadius6}"
+                BorderBrush="{DynamicResource Line}"
                 VerticalAlignment="Center"
                 ToolTip.Tip="Whether the tools here can do their job inside your own user account.">
           <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
@@ -41,7 +143,7 @@
             <PathIcon Data="{StaticResource IconPrivacy}" Width="11" Height="11"
                       Foreground="{DynamicResource Cyan}" IsVisible="{Binding NeedsElevation}"
                       VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding ElevationText}" FontSize="11" FontWeight="SemiBold"
+            <TextBlock Text="{Binding ElevationText}"
                        Classes="muted" VerticalAlignment="Center"/>
           </StackPanel>
         </Border>
@@ -52,17 +154,17 @@
     <!-- TOOL CARDS                                                -->
     <!-- ========================================================= -->
     <ScrollViewer Grid.Row="1">
-      <ItemsControl ItemsSource="{Binding Cards}" Margin="24,18,24,22">
+      <ItemsControl Classes="toolList" ItemsSource="{Binding Cards}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:ToolCardViewModel">
             <!-- The whole card is the button: a tool has exactly one action from
                  here, which is to open its window, so a separate Run target would
                  only be a smaller version of the same click. -->
-            <Button Classes="CardHit" Command="{Binding OpenCommand}"
-                    HorizontalAlignment="Stretch" Margin="0,0,0,10">
-              <Border Classes="card" Padding="16,14">
+            <Button Classes="CardHit toolRow" Command="{Binding OpenCommand}"
+                    HorizontalAlignment="Stretch">
+              <Border Classes="card toolCard">
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
-                  <Border Width="36" Height="36" CornerRadius="9" Margin="0,0,14,0"
+                  <Border Classes="toolIcon" Width="36" Height="36" CornerRadius="{DynamicResource CornerRadius9}" Margin="0,0,14,0"
                           Background="{DynamicResource SurfaceHover}"
                           BorderBrush="{DynamicResource Line}" BorderThickness="1"
                           VerticalAlignment="Center">
@@ -70,8 +172,10 @@
                               Foreground="{DynamicResource Accent}"/>
                   </Border>
 
-                  <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold"
+                  <TextBlock Grid.Column="0" Classes="toolNumber" Text="{Binding NumberText}"/>
+
+                  <StackPanel Grid.Column="1" Classes="toolCopy" VerticalAlignment="Center">
+                    <TextBlock Classes="toolName" Text="{Binding Name}" FontSize="14"
                                Foreground="{DynamicResource Text}"/>
                     <TextBlock Text="{Binding Summary}" FontSize="12" Classes="muted"
                                TextWrapping="Wrap"/>
@@ -92,14 +196,15 @@
 
                   <!-- The step count doubles as a promise: this tool explains itself
                        before it does anything. -->
-                  <Border Grid.Column="4" Background="{DynamicResource SurfaceHover}" CornerRadius="5"
+                  <Border Grid.Column="4" Classes="stepBadge" Background="{DynamicResource SurfaceHover}" CornerRadius="{DynamicResource CornerRadius5}"
                           Padding="8,3" BorderBrush="{DynamicResource Line}" BorderThickness="1"
                           VerticalAlignment="Center" Margin="14,0,0,0"
                           ToolTip.Tip="Opens a window that explains each step before anything runs.">
                     <TextBlock Text="{Binding StepCountText}" FontSize="10" Classes="mono dim"/>
                   </Border>
 
-                  <PathIcon Grid.Column="5" Data="{StaticResource IconChevronRight}"
+                  <TextBlock Grid.Column="5" Classes="theatreArrow" Text="↗"/>
+                  <PathIcon Grid.Column="5" Classes="rowChevron" Data="{StaticResource IconChevronRight}"
                             Width="12" Height="12" Foreground="{DynamicResource Dim}"
                             VerticalAlignment="Center" Margin="12,0,2,0"/>
                 </Grid>

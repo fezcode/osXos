@@ -197,11 +197,11 @@ The one place the list holds a wildcard is the system temp folder, where Codex d
 
 Each OS defines seven categories — Maintenance, a shell one (Explorer & Shell, Finder & Dock, Desktop & Shell), System, Network, AI Assistants, and then Privacy and Developer on Windows and macOS or Packages and Services on Linux. **A category only appears once a tool claims it**, so there are no empty pages anywhere in the app, and a category shows up by itself the day its first tool lands. All three platforms now fill all seven.
 
-![Settings, with all nine palettes](Assets/screenshot-settings.png)
+![Settings and palette choices](Assets/screenshot-settings.png)
 
 ## Themes
 
-Nine editorial palettes — seven light, two dark — and seven typefaces, switchable live, shared with Cogas.
+Ten editorial palettes — eight light, two dark — and seven typefaces, switchable live. The original palettes follow Cogas's design language; Operation Theatre uses a cobalt frame, lime selection highlights, warm paper, numbered navigation and a wide, tabbed tool workspace.
 
 **Light and dark mode** is the Light/Dark switch at the top of Settings. Each mode keeps its own palette, so switching always lands on the one you picked for it, and like everything else on that page it applies live and is kept on Save.
 

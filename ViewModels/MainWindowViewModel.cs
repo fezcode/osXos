@@ -11,6 +11,7 @@ public sealed class NavItem
 {
     public required StreamGeometry Icon { get; init; }
     public required string Name { get; init; }
+    public string NumberText { get; init; } = "";
     public required ViewModelBase Vm { get; init; }
 
     /// <summary>Tool count, shown as the pill on the right of the row.</summary>
@@ -79,13 +80,14 @@ public sealed class MainWindowViewModel : ViewModelBase
         // Only categories that actually have a tool on this OS. An empty category is
         // never drawn, so there are no placeholder pages anywhere in osXos.
         NavItems = services.Tools.Categories
-            .Select(c =>
+            .Select((c, index) =>
             {
                 var tools = services.Tools.InCategory(c.Category);
                 return new NavItem
                 {
                     Icon = Icons.Get(c.IconKey),
                     Name = c.Name,
+                    NumberText = (index + 2).ToString("00"),
                     CountText = tools.Count.ToString("0"),
                     Vm = new CategoryViewModel(c, services.OS, tools, OpenToolAsync),
                 };
@@ -98,6 +100,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             Icon = Icons.Get("IconViewGrid"),
             Name = "All Tools",
+            NumberText = "01",
             CountText = services.Tools.Tools.Count.ToString("0"),
             Vm = AllTools,
         });
@@ -106,6 +109,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             Icon = Icons.Get("IconSettings"),
             Name = "Settings",
+            NumberText = (NavItems.Count + 1).ToString("00"),
             Vm = Settings,
         });
 
