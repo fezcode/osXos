@@ -389,6 +389,9 @@ public class ReadOnlyToolTests
     static readonly string[] Reports =
     {
         "windows.developer-status", "windows.path-health", "windows.startup-apps", "linux.failed-services",
+        "windows.network-configuration", "windows.network-connections", "windows.sleep-states", "windows.installed-drivers",
+        "macos.network-interfaces", "macos.dns-configuration", "macos.battery-status", "macos.sleep-assertions",
+        "linux.network-interfaces", "linux.network-connections", "linux.disk-space", "linux.memory-usage",
     };
 
     [Fact]
@@ -404,7 +407,8 @@ public class ReadOnlyToolTests
     public void A_report_is_never_destructive_and_never_needs_admin()
     {
         var runner = new FakeRunner();
-        var reports = TestCatalog.Windows().Concat(ToolCatalog.Linux(runner)).Where(t => t.IsReadOnly);
+        var reports = TestCatalog.Windows().Concat(ToolCatalog.MacOS(runner))
+            .Concat(ToolCatalog.Linux(runner)).Where(t => t.IsReadOnly);
 
         Assert.All(reports, t =>
         {

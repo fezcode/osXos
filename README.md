@@ -59,7 +59,7 @@ A tool that needs rights declares it, the Review stage says so and names the pro
 
 ### Windows
 
-All seven categories, 133 tools — twenty-eight of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
+All seven categories, 137 tools — thirty-two of osXos's own, five tweaks of its own, and a hundred taken from Chris Titus Tech's WinUtil (below).
 
 | Category | Tool | |
 |---|---|---|
@@ -79,7 +79,11 @@ All seven categories, 133 tools — twenty-eight of osXos's own, five tweaks of 
 | Explorer & Shell | Hide the Taskbar | For a desktop run from Hisashi: auto-hide on, the taskbar windows hidden outright, and a small `osXos --hide-taskbar` keeper — started at once and at every sign-in — that hides any new taskbar Explorer makes after a restart, a crash or a monitor being plugged in. Run it twice to undo, auto-hide restored as it was |
 | System | Switch Dark / Light Mode | Flips `AppsUseLightTheme` and `SystemUsesLightTheme` together, then broadcasts `ImmersiveColorSet` so the taskbar and open apps redraw. Run it twice to undo |
 | System | Startup Apps Report | Both `Run` keys and both Startup folders, each marked enabled or disabled the way Task Manager records it — **read-only** |
+| System | Sleep States Report | Available sleep and hibernation states, with Windows' reasons for unavailable modes — **read-only** |
+| System | Installed Drivers Report | Local driver modules and properties from `driverquery /fo list`; does not install or update drivers — **read-only** |
 | Network | Flush DNS Cache | `ipconfig /flushdns` |
+| Network | Network Configuration Report | Adapter addresses, gateways, DNS servers and DHCP configuration from `ipconfig /all` — **read-only** |
+| Network | Connections & Listening Ports | TCP connections, TCP/UDP listening ports and process IDs from `netstat -a -n -o`, without hostname lookups — **read-only** |
 | Privacy | Clear Recent Files & Jump Lists | The Recent folder plus both jump-list stores |
 | Privacy | Clear Explorer & Run History | Typed paths, the Explorer search box, and the Run dialog |
 | Privacy | Clear Browser Caches | Every profile's disk, script, GPU and service-worker caches in Chrome, Edge, Brave, Vivaldi, Chromium and Firefox. Never cookies, passwords, history or bookmarks |
@@ -130,7 +134,7 @@ Each runs the way WinUtil runs it — one elevated PowerShell, so one administra
 
 ### macOS
 
-All seven categories, eighteen tools.
+All seven categories, twenty-two tools.
 
 | Category | Tool | |
 |---|---|---|
@@ -143,7 +147,11 @@ All seven categories, eighteen tools.
 | Finder & Dock | Restart Dock | `killall Dock`, for a frozen Dock, Mission Control or Launchpad |
 | Finder & Dock | Save Screenshots to Pictures | `com.apple.screencapture location` between `~/Pictures/Screenshots` and the Desktop default |
 | System | Switch Dark / Light Mode | Asks System Events to flip `dark mode`, the same switch as System Settings → Appearance. macOS asks once to allow Automation |
+| System | Battery & Power Source Report | Power source, battery charge and time estimates from `pmset -g batt`; desktops without a battery can report AC power only — **read-only** |
+| System | Sleep Prevention Report | Current power assertions and their owners from `pmset -g assertions`; does not stop apps — **read-only** |
 | Network | Flush DNS Cache | `dscacheutil -flushcache`. The `mDNSResponder` half needs sudo, so osXos shows you that command rather than running it |
+| Network | Network Interfaces Report | Interface addresses, flags and link status from `ifconfig -a` — **read-only** |
+| Network | DNS Configuration Report | Resolver settings, search domains and interface scopes from `scutil --dns`, without test queries — **read-only** |
 | Privacy | Clear Browser Caches | Chrome, Edge, Brave, Vivaldi, Chromium and Firefox caches under `~/Library`. Never cookies or logins. Safari is left out: its cache is behind Full Disk Access |
 | Developer | Clear Developer Caches | The same package-manager caches as on Windows, at their macOS locations |
 | Developer | Clear Xcode Build Data | `DerivedData` (emptied), device support files and Xcode's caches. Never Archives |
@@ -155,7 +163,7 @@ All seven categories, eighteen tools.
 
 ### Linux
 
-All seven categories, sixteen tools.
+All seven categories, twenty tools.
 
 | Category | Tool | |
 |---|---|---|
@@ -165,7 +173,11 @@ All seven categories, sixteen tools.
 | Maintenance | Clear Browser Caches | Chrome, Edge, Brave, Vivaldi, Chromium and Firefox caches under `$XDG_CACHE_HOME` and `~/.config`. Never cookies or logins |
 | Desktop & Shell | Rebuild Icon Cache | `gtk-update-icon-cache -f -t` per theme under `$XDG_DATA_HOME/icons` |
 | System | Switch Dark / Light Mode | KDE Plasma: `plasma-apply-colorscheme` between Breeze Light and Dark. GNOME and friends: `gsettings` `color-scheme`, plus the GTK theme's `-dark` variant when one is installed |
+| System | Local Disk Space Report | Used and available space on mounted local filesystems from `df -h -l`; excludes network filesystems — **read-only** |
+| System | Memory & Swap Report | RAM, available memory, cache and swap counters from `free -h` — **read-only** |
 | Network | Flush DNS Cache | `resolvectl flush-caches`, and an honest refusal if systemd-resolved is not what is resolving here |
+| Network | Network Interfaces Report | Local interface addresses, flags and state from `ip address show` — **read-only** |
+| Network | Connections & Listening Ports | TCP/UDP sockets from `ss -t -u -a -n -p`, with process ownership where your account has permission; no name lookups — **read-only** |
 | Packages | Clear Developer Caches | npm, Yarn, Bun, Deno, node-gyp, pip, uv, NuGet, Go build, Cargo and Gradle caches |
 | Packages | Remove Unused Flatpak Runtimes | `flatpak uninstall --user --unused`. The system installation's command is shown, not run |
 | Packages | Clean Package Cache | `apt-get clean`, `dnf clean packages`, `pacman -Sc` or `zypper clean` — **needs administrator rights**, asked for through polkit |
@@ -265,7 +277,7 @@ Forge targets Windows, so `installer.ps1` produces `dist/installer/osXos-Setup-<
 
 ## Verification status
 
-The four Windows tools were run and verified on Windows 11. **The macOS and Linux tools have not been run end to end** — they were developed and unit-tested for everything that does not need their OS (paths built, exact argv, output parsing, blocked-state handling), but no Mac or Linux machine was available. Treat those eight as untested against a real system until someone runs them.
+Windows is the only platform exercised on its own OS, including live checks of the four Windows diagnostic reports. **The macOS and Linux tools have not been run end to end** — their paths, command arguments, output handling and blocked states are unit-tested here, but no Mac or Linux machine was available. The new macOS and Linux diagnostic reports share tested snapshot handling with Windows; they remain unverified against their native systems.
 
 The same goes for the menu bar. The tree is built and converted for real on both paths — the native `NativeMenu` is constructed and walked in the screenshot harness, and the hoswl translation is unit-tested — but **it has not been seen in the macOS menu bar or in a Linux global menu**, and Hisashi was not running here to confirm the Windows path end to end.
 

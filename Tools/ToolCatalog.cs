@@ -59,9 +59,13 @@ public static class ToolCatalog
             // System
             new Tools.Windows.DarkModeTool(appearance),
             new StartupAppsTool(registry),
+            new SleepStatesTool(runner),
+            new InstalledDriversTool(runner),
 
             // Network
             new Tools.Windows.FlushDnsTool(runner),
+            new NetworkConfigurationTool(runner),
+            new NetworkConnectionsTool(runner),
 
             // Privacy
             new RecentItemsTool(),
@@ -115,9 +119,13 @@ public static class ToolCatalog
 
             // System
             new Tools.MacOS.DarkModeTool(runner),
+            new Tools.MacOS.BatteryStatusTool(runner),
+            new Tools.MacOS.SleepAssertionsTool(runner),
 
             // Network
             new Tools.MacOS.FlushDnsTool(runner),
+            new Tools.MacOS.NetworkInterfacesTool(runner),
+            new Tools.MacOS.DnsConfigurationTool(runner),
 
             // Privacy
             new LocationCleanupTool(BrowserCaches.For(OSKind.MacOS)),
@@ -149,9 +157,13 @@ public static class ToolCatalog
 
             // System
             new Tools.Linux.DarkModeTool(runner),
+            new Tools.Linux.DiskSpaceTool(runner),
+            new Tools.Linux.MemoryUsageTool(runner),
 
             // Network
             new Tools.Linux.FlushDnsTool(runner),
+            new Tools.Linux.NetworkInterfacesTool(runner),
+            new Tools.Linux.NetworkConnectionsTool(runner),
 
             // Packages
             new LocationCleanupTool(DeveloperCaches.For(OSKind.Linux)),
