@@ -21,8 +21,8 @@ support_url = "https://github.com/fezcode/osXos/issues"
 comments    = "System utilities that explain themselves before they run"
 
 [ui]
-# available themes: atelier, aurora, console, mica
-theme        = "mica"
+# available themes: glass, huh, console, mica
+theme        = "glass"
 window_title = "osXos ${app.version} Setup"
 
 [install]
